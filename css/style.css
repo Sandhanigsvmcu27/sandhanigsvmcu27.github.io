@@ -47,7 +47,13 @@ section h3.sec{font-size:22px;color:var(--blue);border-left:6px solid var(--red)
 .stock-card{background:#fff;border:2px solid #e0e0e0;border-radius:12px;text-align:center;padding:16px 8px}
 .stock-card .grp{font-size:20px;font-weight:800;color:var(--red)}
 .stock-card .bag{font-size:15px;color:#333}
-.stock-card.low{border-color:var(--red);background:#fff5f5}
+.stock-card.low{border-color:#f9a825;background:#fff8e1}
+.stock-card.out{border-color:#ddd;background:#fafafa}
+.stock-card .stat{font-size:16px;font-weight:700;margin-top:4px}
+.stock-card .stat.ok{color:#1e8e3e}
+.stock-card .stat.low{color:#a67c00}
+.stock-card .stat.out{color:#777}
+.stock-card .vn{font-size:17px;font-weight:800;color:var(--blue)}
 .note{font-size:13px;color:#777;margin-top:10px}
 .tag{display:inline-block;background:#fff3cd;color:#856404;font-size:12px;padding:2px 10px;border-radius:20px;margin-bottom:10px}
 
@@ -167,3 +173,13 @@ form.f legend{font-weight:800;color:var(--blue);padding:0 8px;font-size:15px}
 .req-star{color:var(--red);font-weight:800}
 .field-err{color:var(--red-dark);font-size:13px;margin-top:4px;display:none;font-weight:600}
 form.f input.invalid{border-color:var(--red);background:#fff8f8}
+
+/* activity feed cards (2026-10-20) */
+.feed-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+.a-card{background:#fff;border:1px solid #e3e3e3;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05);cursor:pointer;display:block}
+.a-card img{width:100%;height:200px;object-fit:cover;display:block}
+.a-card .body{padding:14px 16px}
+.a-card .cat{display:inline-block;background:#eef3fb;color:var(--blue);font-size:12px;font-weight:700;padding:1px 8px;border-radius:12px;margin-bottom:6px}
+.a-card .ttl{font-size:17px;font-weight:800;color:#222;line-height:1.45}
+.a-card .meta{font-size:13px;color:#666;margin-top:5px}
+.a-card .desc{font-size:14px;color:#444;margin-top:6px;line-height:1.6}
