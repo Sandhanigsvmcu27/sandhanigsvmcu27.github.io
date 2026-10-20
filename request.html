@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>জরুরি রক্তের অনুরোধ — সন্ধানী GSVMC ইউনিট</title>
+<meta name="description" content="রক্তের প্রয়োজন হলে সন্ধানী GSVMC ইউনিটে অনুরোধ পাঠান — লগইন ছাড়াই, ট্র্যাকিং নম্বরসহ।">
+<meta property="og:title" content="রক্তের অনুরোধ করুন — সন্ধানী GSVMC ইউনিট">
+<meta property="og:description" content="রক্তের প্রয়োজনে, আমরা আছি পাশে। ফর্মটি পূরণ করে অনুরোধ পাঠান, ট্র্যাকিং নম্বর দিয়ে অবস্থা দেখুন।">
+<meta property="og:image" content="https://sandhanigsvmcu27.github.io/assets/sandhani-logo.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -32,36 +39,45 @@
   <h3 class="sec">জরুরি রক্তের অনুরোধ + মেসেজ</h3>
 
   <div id="formWrap" class="card">
+    <p style="margin-bottom:14px;">ফর্মটি পূরণ করে পাঠিয়ে দিন — কোনো লগইন লাগবে না। <span class="req-star">*</span> চিহ্নিত ঘরগুলো অবশ্যই পূরণ করতে হবে।</p>
     <div class="err" id="pageErr" style="display:none;"></div>
     <form class="f" id="reqForm">
-      <div>
-        <label for="patient">রোগীর নাম</label>
-        <input type="text" id="patient" required placeholder="যেমন: করিম উদ্দিন">
-      </div>
-      <div class="grid2">
+      <fieldset>
+        <legend>রোগীর তথ্য</legend>
         <div>
-          <label for="group">প্রয়োজনীয় ব্লাড গ্রুপ</label>
-          <select id="group"></select>
+          <label for="patient">রোগীর নাম <span class="req-star">*</span></label>
+          <input type="text" id="patient" required placeholder="যেমন: করিম উদ্দিন" autocomplete="off">
+        </div>
+        <div class="grid2">
+          <div>
+            <label for="group">প্রয়োজনীয় ব্লাড গ্রুপ <span class="req-star">*</span></label>
+            <select id="group"></select>
+          </div>
+          <div>
+            <label for="bags">কয় ব্যাগ লাগবে <span class="req-star">*</span></label>
+            <input type="number" id="bags" min="1" max="10" value="1" required inputmode="numeric">
+          </div>
         </div>
         <div>
-          <label for="bags">কয় ব্যাগ লাগবে</label>
-          <input type="number" id="bags" min="1" max="10" value="1" required>
+          <label for="hospital">হাসপাতাল <span class="req-star">*</span></label>
+          <input type="text" id="hospital" required placeholder="যেমন: গণস্বাস্থ্য হাসপাতাল, সাভার">
         </div>
-      </div>
-      <div>
-        <label for="hospital">হাসপাতাল</label>
-        <input type="text" id="hospital" required placeholder="যেমন: গণস্বাস্থ্য হাসপাতাল, সাভার">
-      </div>
-      <div>
-        <label for="contact">যোগাযোগ নম্বর</label>
-        <input type="tel" id="contact" required placeholder="01XXXXXXXXX">
-        <p class="note">এই নম্বর শুধু সন্ধানী টিম দেখতে পারবে — পাবলিকভাবে প্রকাশ করা হবে না।</p>
-      </div>
-      <div>
-        <label for="message">মেসেজ (টিমকে কিছু জানাতে চাইলে)</label>
-        <textarea id="message" rows="3" placeholder="আপনার বার্তা লিখুন..."></textarea>
-      </div>
+      </fieldset>
+      <fieldset>
+        <legend>যোগাযোগ ও মেসেজ</legend>
+        <div>
+          <label for="contact">যোগাযোগ নম্বর <span class="req-star">*</span></label>
+          <input type="tel" id="contact" required placeholder="01XXXXXXXXX" inputmode="tel" autocomplete="tel">
+          <p class="field-err" id="phoneErr">সঠিক মোবাইল নম্বর দিন — 01 দিয়ে শুরু হওয়া ১১ ডিজিটের নম্বর হতে হবে।</p>
+          <p class="note">এই নম্বর শুধু সন্ধানী টিম দেখতে পারবে — পাবলিকভাবে প্রকাশ করা হবে না।</p>
+        </div>
+        <div>
+          <label for="message">মেসেজ (টিমকে কিছু জানাতে চাইলে)</label>
+          <textarea id="message" rows="3" placeholder="আপনার বার্তা লিখুন..."></textarea>
+        </div>
+      </fieldset>
       <button type="submit">যোগাযোগ করুন / অনুরোধ পাঠান →</button>
+      <p class="note">অনুরোধ পাঠালেই একটি ট্র্যাকিং নম্বর পাবেন — তা দিয়ে টিমের উত্তর দেখতে পারবেন। মনে রাখবেন, অনুরোধ পাঠানো মানেই রক্ত নিশ্চিত হয়ে যাওয়া নয়; টিম যাচাই করে উত্তর দেবে।</p>
     </form>
   </div>
 
@@ -70,7 +86,17 @@
       <div style="font-size:20px;font-weight:700;">✅ আপনার অনুরোধ টিমের কাছে পৌঁছেছে!</div>
       <p>আপনার প্রাইভেট ট্র্যাকিং নম্বর:</p>
       <div class="track-num" id="trackNum"></div>
-      <p>এই নম্বরটি লিখে রাখুন। নিচের লিংকে গিয়ে টিমের রিপ্লাই দেখতে পারবেন এবং আরও মেসেজ পাঠাতে পারবেন — <strong>কোনো লগইন লাগবে না।</strong></p>
+      <p><button type="button" class="btn small blue" id="copyTrack">📋 ট্র্যাকিং নম্বর কপি করুন</button> <span id="copyOk" style="color:var(--green);font-weight:700;display:none;">✓ কপি হয়েছে</span></p>
+      <p style="margin-top:10px;">এই নম্বরটি লিখে রাখুন বা কপি করে পরিবারের কাছে পাঠিয়ে দিন। নিচের লিংকে গিয়ে টিমের রিপ্লাই দেখতে পারবেন এবং আরও মেসেজ পাঠাতে পারবেন — <strong>কোনো লগইন লাগবে না।</strong></p>
+      <div style="text-align:left;max-width:520px;margin:18px auto 0;">
+        <p><strong>এরপর কী হবে?</strong></p>
+        <ul class="rules">
+          <li>আমাদের টিম অনুরোধটি দেখে তথ্য যাচাই করবে।</li>
+          <li>স্টকে রক্ত থাকলে অথবা ডোনার পাওয়া গেলে টিম ট্র্যাকিং পেজেই উত্তর দেবে — মাঝে মাঝে এসে দেখে যান।</li>
+          <li>মনে রাখবেন: অনুরোধ পাঠানো মানেই রক্ত নিশ্চিত হয়ে যাওয়া নয় — টিমের উত্তরই চূড়ান্ত।</li>
+          <li>খুব জরুরি হলে আমাদের অফিসে সরাসরি আসুন: হাসপাতাল ভবন, ২য় তলা, রুম নং-২১৫, মির্জানগর, সাভার।</li>
+        </ul>
+      </div>
       <p style="margin-top:14px;"><a class="btn blue" id="trackLink" href="#">আমার অনুরোধ ও মেসেজ দেখুন →</a></p>
       <p class="note">টিমের ফোন নম্বর আপনি দেখবেন না — সব যোগাযোগ এই সিস্টেমের ভেতরেই হবে।</p>
     </div>
@@ -92,6 +118,19 @@
   document.getElementById('reqForm').addEventListener('submit', async function (e) {
     e.preventDefault();
     hidePageError();
+    // ফোন নম্বর যাচাই: 01 দিয়ে শুরু ১১ ডিজিট (বাংলাদেশি মোবাইল)
+    const contactEl = document.getElementById('contact');
+    const phoneErr = document.getElementById('phoneErr');
+    const phoneClean = contactEl.value.replace(/[\s-]/g, '');
+    if (!/^01[3-9]\d{8}$/.test(phoneClean)) {
+      phoneErr.style.display = 'block';
+      contactEl.classList.add('invalid');
+      contactEl.focus();
+      contactEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    phoneErr.style.display = 'none';
+    contactEl.classList.remove('invalid');
     const btn = e.target.querySelector('button[type="submit"]');
     btn.disabled = true;
     const payload = {
@@ -99,7 +138,7 @@
       blood_group: sel.value,
       bags_needed: parseInt(document.getElementById('bags').value, 10) || 1,
       hospital: document.getElementById('hospital').value.trim(),
-      contact_phone: document.getElementById('contact').value.trim(),
+      contact_phone: phoneClean,
       status: 'new'
     };
     const msgText = document.getElementById('message').value.trim();
@@ -133,6 +172,24 @@
       showPageError('অনুরোধ পাঠানো যায়নি, আবার চেষ্টা করুন।');
       btn.disabled = false;
     }
+  });
+
+  // ট্র্যাকিং নম্বর কপি বাটন
+  document.getElementById('copyTrack').addEventListener('click', function () {
+    const t = document.getElementById('trackNum').textContent.replace('#', '').trim();
+    if (!t) return;
+    const okEl = document.getElementById('copyOk');
+    function done() { okEl.style.display = 'inline'; setTimeout(function () { okEl.style.display = 'none'; }, 2200); }
+    function fallback() {
+      const ta = document.createElement('textarea');
+      ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch (e) { /* হাতে লিখে রাখতে বলা হয়েছে */ }
+      document.body.removeChild(ta);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(t).then(done).catch(fallback);
+    } else { fallback(); }
   });
 </script>
 <script src="js/nav.js"></script>

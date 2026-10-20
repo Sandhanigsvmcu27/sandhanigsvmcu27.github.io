@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>অনুরোধ ট্র্যাক করুন — সন্ধানী GSVMC ইউনিট</title>
+<meta name="description" content="আপনার রক্তের অনুরোধের অবস্থা দেখুন — ট্র্যাকিং নম্বর (SB-) দিয়ে, লগইন ছাড়াই।">
+<meta property="og:title" content="অনুরোধের অবস্থা দেখুন — সন্ধানী GSVMC ইউনিট">
+<meta property="og:description" content="ট্র্যাকিং নম্বর দিয়ে আপনার রক্তের অনুরোধের সর্বশেষ অবস্থা ও টিমের উত্তর দেখুন।">
+<meta property="og:image" content="https://sandhanigsvmcu27.github.io/assets/sandhani-logo.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -32,6 +39,7 @@
   <h3 class="sec">আপনার অনুরোধ ট্র্যাক করুন</h3>
 
   <div class="card" id="lookupCard">
+    <p style="margin-bottom:14px;">অনুরোধ পাঠানোর পর সফল স্ক্রিনে যে <strong>SB-</strong> দিয়ে শুরু হওয়া ট্র্যাকিং নম্বরটি পেয়েছিলেন, সেটি এখানে লিখুন — টিমের উত্তর ও অনুরোধের অবস্থা দেখতে পারবেন। কোনো লগইন লাগবে না।</p>
     <form class="f" id="lookupForm">
       <div>
         <label for="trackNo">ট্র্যাকিং নম্বর (যেমন: SB-1042)</label>
@@ -49,6 +57,7 @@
         <span id="tStatus"></span>
       </div>
       <div id="tInfo" style="font-size:14px;color:#555;"></div>
+      <p id="tNext" style="font-size:14px;color:#333;margin-top:10px;background:#f4f7fb;border-radius:8px;padding:10px 12px;"></p>
     </div>
 
     <div class="thread">
@@ -85,6 +94,13 @@
       'রোগী: <strong>' + esc(current.patient_name) + '</strong> · ব্লাড গ্রুপ: <strong>' + grpDisplay(current.blood_group) + '</strong> · ' +
       bnDigits(current.bags_needed) + ' ব্যাগ · হাসপাতাল: ' + esc(current.hospital || '—') + '<br>' +
       'অনুরোধের তারিখ: ' + fmtDateBn(current.created_at);
+    const NEXT = {
+      'new': '⏳ আপনার অনুরোধটি টিমের কাছে পৌঁছেছে। টিম তথ্য যাচাই করে এখানেই উত্তর দেবে — মাঝে মাঝে এসে দেখে যান।',
+      'in-progress': '🔄 টিম আপনার অনুরোধ নিয়ে কাজ করছে। নতুন আপডেট এলে নিচের মেসেজে জানিয়ে দেওয়া হবে।',
+      'fulfilled': '✅ এই অনুরোধটি সম্পন্ন হয়েছে। জরুরি প্রয়োজনে সন্ধানীর পাশে থাকার জন্য ধন্যবাদ।',
+      'closed': 'এই অনুরোধটি বন্ধ করা হয়েছে। নতুন প্রয়োজনে আবার নতুন অনুরোধ করুন।'
+    };
+    document.getElementById('tNext').textContent = NEXT[current.status] || '';
     const box = document.getElementById('tMsgs');
     box.innerHTML = '';
     const msgs = current.messages || [];
