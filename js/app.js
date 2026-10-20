@@ -216,6 +216,46 @@ const Auth = {
     return { ok: true, session: this.view(sess) };
   },
 
+  /* Google OAuth — Supabase authorize endpoint-এ পাঠায়; ফিরে আসে login.html-এ
+     hash-এ token নিয়ে (acceptOAuthRedirect সেটা ধরে) */
+  signInWithGoogle() {
+    const redirectTo = location.origin + location.pathname;
+    location.href = SB_URL + '/auth/v1/authorize?provider=google&redirect_to=' + encodeURIComponent(redirectTo);
+  },
+
+  /* Google থেকে ফিরে এলে hash-এর token দিয়ে session বসায়।
+     hash না থাকলে null; profile না থাকলে/সক্রিয় না হলে { ok:false, pending:true } */
+  async acceptOAuthRedirect() {
+    if (!location.hash || location.hash.indexOf('access_token=') === -1) return null;
+    const p = new URLSearchParams(location.hash.slice(1));
+    const access = p.get('access_token');
+    const refresh = p.get('refresh_token');
+    history.replaceState(null, '', location.pathname + location.search);
+    if (!access) return { ok: false, error: 'Google লগইন সম্পন্ন করা যায়নি, আবার চেষ্টা করুন।' };
+    let user = null;
+    try {
+      const r = await fetch(SB_URL + '/auth/v1/user', { headers: { apikey: SB_ANON, Authorization: 'Bearer ' + access } });
+      if (r.ok) user = await r.json();
+    } catch (e) { /* ignore */ }
+    if (!user) return { ok: false, error: 'Google লগইন সম্পন্ন করা যায়নি, আবার চেষ্টা করুন।' };
+    const sess = {
+      access_token: access,
+      refresh_token: refresh,
+      expires_at: Date.now() + (parseInt(p.get('expires_in') || '3600', 10)) * 1000,
+      user: user,
+      profile: null
+    };
+    this._save(sess);
+    const profile = await this.fetchProfile(sess);
+    if (!profile || !profile.active) {
+      this.clear();
+      return { ok: false, pending: true };
+    }
+    sess.profile = profile;
+    this._save(sess);
+    return { ok: true, session: this.view(sess) };
+  },
+
   async fetchProfile(sess) {
     if (!sess || !sess.user || !sess.user.id) return null;
     try {
