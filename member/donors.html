@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ডোনার ডিরেক্টরি — সন্ধানী মেম্বার এরিয়া</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="member-shell">
+  <div class="member-main">
+    <h2 class="page">🩸 ডোনার ডিরেক্টরি <span class="tag">🔒 শুধু টিমের জন্য</span></h2>
+    <div class="err" id="pageErr" style="display:none;"></div>
+
+    <div class="toolbar">
+      <select id="fGroup">
+        <option value="">সব গ্রুপ</option>
+      </select>
+      <select id="fCategory">
+        <option value="">সব ধরন</option>
+        <option value="medical_student">মেডিকেল শিক্ষার্থী</option>
+        <option value="non_medical">নন-মেডিকেল</option>
+        <option value="other">অন্যান্য</option>
+      </select>
+      <input type="text" id="fArea" placeholder="এলাকা লিখুন (যেমন: সাভার)">
+      <input type="text" id="fName" placeholder="নাম দিয়ে খুঁজুন">
+      <label style="font-size:14px;"><input type="checkbox" id="fEligible"> শুধু Eligible</label>
+      <button class="btn small blue" id="fSearch">🔍 খুঁজুন</button>
+      <button class="btn small gray" id="fClear">রিসেট</button>
+    </div>
+
+    <p class="note" id="countLine" style="margin-bottom:10px;"></p>
+    <div style="overflow-x:auto;">
+      <table class="t" id="donorTable">
+        <thead>
+          <tr><th>নাম</th><th>গ্রুপ</th><th>এলাকা</th><th>ফোন</th><th>শেষ ডোনেশন</th><th>স্ট্যাটাস</th><th>কল</th><th>ফলাফল / ইতিহাস</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <h4 style="margin-bottom:10px;">➕ নতুন ডোনার যোগ করুন</h4>
+      <form class="f" id="addDonorForm">
+        <div class="grid2">
+          <div><label>নাম</label><input type="text" id="ndName" required></div>
+          <div><label>ব্লাড গ্রুপ</label><select id="ndGroup"></select></div>
+        </div>
+        <div class="grid2">
+          <div><label>এলাকা</label><input type="text" id="ndArea" required></div>
+          <div><label>ফোন</label><input type="tel" id="ndPhone" required placeholder="01XXXXXXXXX"></div>
+        </div>
+        <div><label>নোট (ঐচ্ছিক)</label><input type="text" id="ndNotes"></div>
+        <button type="submit">ডোনার যোগ করুন →</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- call outcome modal -->
+<div id="outcomeModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:50;">
+  <div class="card" style="max-width:480px;margin:60px auto;">
+    <h4 id="omTitle" style="margin-bottom:12px;">📝 কলের ফলাফল</h4>
+    <form class="f" id="outcomeForm">
+      <div><label>ফলাফল</label>
+        <select id="ocOutcome">
+          <option value="donated">✅ সম্প্রতি দিয়েছে</option>
+          <option value="promised">📅 অমুক তারিখে দেবে</option>
+          <option value="not_reachable">📵 ধরেনি</option>
+          <option value="declined">❌ এবার দেবে না</option>
+          <option value="note">📝 শুধু নোট</option>
+        </select>
+      </div>
+      <div id="ocDateWrap"><label id="ocDateLabel">ডোনেশনের তারিখ</label><input type="date" id="ocDate"></div>
+      <div><label>নোট</label><textarea id="ocNote" rows="2" placeholder="যেমন: ফোনে বললেন..."></textarea></div>
+      <div style="display:flex;gap:10px;">
+        <button type="submit" class="btn green">সেভ করুন</button>
+        <button type="button" class="btn gray" id="omCancel">বাতিল</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- call history modal -->
+<div id="histModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:50;">
+  <div class="card" style="max-width:560px;margin:60px auto;max-height:80vh;overflow-y:auto;">
+    <h4 id="hmTitle" style="margin-bottom:12px;">📜 কল হিস্ট্রি</h4>
+    <div class="timeline" id="hmBody"></div>
+    <button class="btn gray" id="hmClose" style="margin-top:12px;">বন্ধ করুন</button>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/app.js"></script>
+<script>
+  (async function init() {
+    const sess = await Auth.guard(false);
+    if (!sess) return;
+    document.querySelector('.member-shell').insertAdjacentHTML('afterbegin', sidebarHTML('donors.html', sess));
+
+    const fGroup = document.getElementById('fGroup'), fCategory = document.getElementById('fCategory'),
+          fArea = document.getElementById('fArea'), fName = document.getElementById('fName'),
+          fEligible = document.getElementById('fEligible');
+    GROUPS.forEach(g => { const o = document.createElement('option'); o.value = g; o.textContent = grpDisplay(g); fGroup.appendChild(o); });
+    const ndGroup = document.getElementById('ndGroup');
+    GROUPS.forEach(g => { const o = document.createElement('option'); o.value = g; o.textContent = grpDisplay(g); ndGroup.appendChild(o); });
+
+    const OUTCOME_BN = { donated: '✅ সম্প্রতি দিয়েছে', promised: '📅 অমুক তারিখে দেবে', not_reachable: '📵 ধরেনি', declined: '❌ এবার দেবে না', note: '📝 নোট' };
+    const CAT_BN = { medical_student: 'মেডিকেল শিক্ষার্থী', non_medical: 'নন-মেডিকেল', other: 'অন্যান্য' };
+    let outcomeDonorId = null;
+    let donorsCache = [];
+    let categoryOk = true; // live DB-তে category column আছে; না থাকলে fallback
+
+    function telHref(phone) { return 'tel:' + String(phone).replace(/[^0-9+]/g, ''); }
+
+    function donorQuery(withCategory) {
+      const cols = 'id,name,phone,blood_group,batch,area,last_donation_date,promised_date,verified,notes' + (withCategory ? ',category' : '');
+      const q = new URLSearchParams();
+      q.set('select', cols);
+      if (fGroup.value) q.set('blood_group', 'eq.' + fGroup.value);
+      if (withCategory && fCategory.value) q.set('category', 'eq.' + fCategory.value);
+      if (fArea.value.trim()) q.set('area', 'ilike.*' + fArea.value.trim() + '*');
+      if (fName.value.trim()) q.set('name', 'ilike.*' + fName.value.trim() + '*');
+      q.set('order', 'blood_group.asc,name.asc');
+      return '/donors?' + q.toString();
+    }
+
+    async function loadDonors() {
+      hidePageError();
+      try {
+        donorsCache = await SB.get(donorQuery(categoryOk)) || [];
+      } catch (e) {
+        if (categoryOk) {
+          // category column/filter নিয়ে সমস্যা হলে একবার ছাড়া আবার চেষ্টা
+          categoryOk = false;
+          try { donorsCache = await SB.get(donorQuery(false)) || []; }
+          catch (e2) { showPageError(); donorsCache = []; }
+        } else {
+          showPageError();
+          donorsCache = [];
+        }
+      }
+      render();
+    }
+
+    function render() {
+      let list = donorsCache.slice();
+      if (fEligible.checked) list = list.filter(d => donorStatus(d).eligible);
+      // Group-wise সাজানো: প্রথমে group (GROUPS-এর ক্রমে), তারপর নাম
+      list.sort((a, b) => (GROUPS.indexOf(a.blood_group) - GROUPS.indexOf(b.blood_group)) || String(a.name).localeCompare(String(b.name)));
+
+      const tb = document.querySelector('#donorTable tbody');
+      tb.innerHTML = '';
+      let lastGroup = null;
+      list.forEach(d => {
+        if (d.blood_group !== lastGroup) {
+          lastGroup = d.blood_group;
+          const gh = document.createElement('tr');
+          gh.innerHTML = '<td colspan="8" style="background:#eef3fb;font-weight:700;color:var(--blue);">' + grpDisplay(lastGroup) + ' — ' + bnDigits(list.filter(x => x.blood_group === lastGroup).length) + ' জন</td>';
+          tb.appendChild(gh);
+        }
+        const st = donorStatus(d);
+        const badge = st.eligible
+          ? '<span class="badge ok">Eligible</span>'
+          : '<span class="badge wait">' + fmtDateBn(st.eligibleDate) + ' পর্যন্ত বিরতি</span>';
+        const sub = [d.batch, (d.category && CAT_BN[d.category]) || d.category].filter(Boolean).map(esc).join(' · ');
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td><strong>' + esc(d.name) + '</strong>' + (d.verified ? ' <span class="badge ok">✔ যাচাইকৃত</span>' : '') + (sub ? '<br><span style="font-size:12px;color:#777;">' + sub + '</span>' : '') +
+            (d.promised_date && d.promised_date >= isoToday() ? '<br><span class="badge new">📅 ' + fmtDateBn(d.promised_date) + ' দেবে</span>' : '') + '</td>' +
+          '<td><strong>' + grpDisplay(d.blood_group) + '</strong></td>' +
+          '<td>' + esc(d.area || '—') + '</td>' +
+          '<td>' + (d.phone ? '<a href="' + telHref(d.phone) + '">' + esc(d.phone) + '</a>' : '<span style="color:#999;">নম্বর নেই</span>') + '</td>' +
+          '<td>' + (d.last_donation_date ? fmtDateBn(d.last_donation_date) : '—') + '</td>' +
+          '<td>' + badge + '</td>' +
+          '<td>' + (d.phone ? '<a class="btn small green" href="' + telHref(d.phone) + '">📞 কল</a>' : '<span style="color:#999;">নম্বর নেই</span>') + '</td>' +
+          '<td style="white-space:nowrap;"><button class="btn small blue" data-outcome="' + d.id + '">📝 ফলাফল</button> <button class="btn small gray" data-hist="' + d.id + '">📜 ইতিহাস</button></td>';
+        tb.appendChild(tr);
+      });
+      if (!list.length) {
+        tb.innerHTML = '<tr><td colspan="8" class="note">কোনো ডোনার পাওয়া যায়নি।</td></tr>';
+      }
+      document.getElementById('countLine').textContent = 'মোট ' + bnDigits(list.length) + ' জন ডোনার পাওয়া গেছে।';
+    }
+
+    document.getElementById('fSearch').addEventListener('click', loadDonors);
+    document.getElementById('fEligible').addEventListener('change', render);
+    document.getElementById('fClear').addEventListener('click', () => { fGroup.value = ''; fCategory.value = ''; fArea.value = ''; fName.value = ''; fEligible.checked = false; loadDonors(); });
+
+    // outcome modal
+    const modal = document.getElementById('outcomeModal');
+    document.querySelector('#donorTable tbody').addEventListener('click', e => {
+      const ob = e.target.closest('[data-outcome]'), hb = e.target.closest('[data-hist]');
+      if (ob) {
+        outcomeDonorId = ob.getAttribute('data-outcome');
+        const d = donorsCache.find(x => x.id === outcomeDonorId);
+        document.getElementById('omTitle').textContent = '📝 কলের ফলাফল — ' + (d ? d.name : '');
+        document.getElementById('ocDate').value = isoToday();
+        document.getElementById('ocNote').value = '';
+        updateDateLabel();
+        modal.style.display = 'block';
+      } else if (hb) { showHistory(hb.getAttribute('data-hist')); }
+    });
+    document.getElementById('omCancel').addEventListener('click', () => { modal.style.display = 'none'; });
+    function updateDateLabel() {
+      const v = document.getElementById('ocOutcome').value;
+      document.getElementById('ocDateWrap').style.display = (v === 'donated' || v === 'promised') ? 'block' : 'none';
+      document.getElementById('ocDateLabel').textContent = v === 'promised' ? 'দেবে যেই তারিখে' : 'ডোনেশনের তারিখ';
+    }
+    document.getElementById('ocOutcome').addEventListener('change', updateDateLabel);
+    document.getElementById('outcomeForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const d = donorsCache.find(x => x.id === outcomeDonorId);
+      if (!d) return;
+      const outcome = document.getElementById('ocOutcome').value;
+      const needsDate = (outcome === 'donated' || outcome === 'promised');
+      const date = document.getElementById('ocDate').value || isoToday();
+      const note = document.getElementById('ocNote').value.trim();
+      try {
+        await SB.insert('call_logs', {
+          donor_id: d.id, outcome,
+          outcome_date: needsDate ? date : null,
+          note, called_by: sess.name
+        });
+        if (outcome === 'donated') {
+          await SB.update('/donors?id=eq.' + encodeURIComponent(d.id), { last_donation_date: date, promised_date: null });
+        } else if (outcome === 'promised') {
+          await SB.update('/donors?id=eq.' + encodeURIComponent(d.id), { promised_date: date });
+        }
+        modal.style.display = 'none';
+        await loadDonors();
+        alert('ফলাফল সেভ হয়েছে।');
+      } catch (err) {
+        alert('সেভ করা যায়নি, আবার চেষ্টা করুন।');
+      }
+    });
+
+    async function showHistory(donorId) {
+      const d = donorsCache.find(x => x.id === donorId);
+      document.getElementById('hmTitle').textContent = '📜 কল হিস্ট্রি — ' + (d ? d.name : '');
+      const body = document.getElementById('hmBody');
+      body.innerHTML = '<p class="note">লোড হচ্ছে…</p>';
+      document.getElementById('histModal').style.display = 'block';
+      try {
+        const logs = await SB.get('/call_logs?select=outcome,outcome_date,note,called_by,created_at&donor_id=eq.' + encodeURIComponent(donorId) + '&order=created_at.desc') || [];
+        body.innerHTML = logs.length
+          ? logs.map(c => '<div class="tl-item"><strong>' + (OUTCOME_BN[c.outcome] || c.outcome) + '</strong>' + (c.outcome_date ? ' — ' + fmtDateBn(c.outcome_date) : '') + (c.note ? '<br>' + esc(c.note) : '') + '<div class="tl-date">' + fmtDateBn(c.created_at) + ' · ' + esc(c.called_by || '') + '</div></div>').join('')
+          : '<p class="note">এখনো কোনো কল রেকর্ড নেই।</p>';
+      } catch (e) {
+        body.innerHTML = '<p class="note">ইতিহাস লোড করা যায়নি, আবার চেষ্টা করুন।</p>';
+      }
+    }
+    document.getElementById('hmClose').addEventListener('click', () => { document.getElementById('histModal').style.display = 'none'; });
+
+    // add donor
+    document.getElementById('addDonorForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      try {
+        await SB.insert('donors', {
+          name: document.getElementById('ndName').value.trim(),
+          blood_group: ndGroup.value,
+          area: document.getElementById('ndArea').value.trim(),
+          phone: document.getElementById('ndPhone').value.trim(),
+          notes: document.getElementById('ndNotes').value.trim()
+        });
+        e.target.reset();
+        await loadDonors();
+        alert('নতুন ডোনার যোগ হয়েছে।');
+      } catch (err) {
+        alert('ডোনার যোগ করা যায়নি, আবার চেষ্টা করুন।');
+      }
+    });
+
+    loadDonors();
+  })();
+</script>
+</body>
+</html>

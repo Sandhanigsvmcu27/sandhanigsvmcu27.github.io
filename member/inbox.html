@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ইনবক্স — সন্ধানী মেম্বার এরিয়া</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="member-shell">
+  <div class="member-main">
+    <h2 class="page">📥 ইনবক্স — অনুরোধসমূহ</h2>
+    <div class="err" id="pageErr" style="display:none;"></div>
+
+    <div class="toolbar">
+      <select id="fStatus">
+        <option value="">সব স্ট্যাটাস</option>
+        <option value="new">নতুন</option>
+        <option value="in-progress">প্রক্রিয়াধীন</option>
+        <option value="fulfilled">সম্পন্ন</option>
+        <option value="closed">বন্ধ</option>
+      </select>
+      <input type="text" id="fTrack" placeholder="ট্র্যাকিং নম্বর দিয়ে খুঁজুন">
+    </div>
+
+    <div id="reqList"></div>
+
+    <div id="threadWrap" style="display:none;">
+      <div class="thread">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
+          <strong style="font-size:18px;" id="thTrack"></strong>
+          <span id="thStatusBadge"></span>
+        </div>
+        <div id="thInfo" style="font-size:14px;color:#555;margin-bottom:8px;"></div>
+
+        <div class="grid2" style="margin:12px 0;">
+          <div>
+            <label style="font-size:13px;font-weight:600;">স্ট্যাটাস বদলান</label>
+            <select id="thStatus" style="width:100%;padding:9px;border:1px solid #ccc;border-radius:8px;">
+              <option value="new">নতুন</option>
+              <option value="in-progress">প্রক্রিয়াধীন (ডোনার খোঁজা হচ্ছে)</option>
+              <option value="fulfilled">সম্পন্ন</option>
+              <option value="closed">বন্ধ</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:13px;font-weight:600;">দায়িত্ব (Handler)</label>
+            <select id="thHandler" style="width:100%;padding:9px;border:1px solid #ccc;border-radius:8px;"></select>
+          </div>
+        </div>
+
+        <div class="msgs" id="thMsgs"></div>
+
+        <form class="f" id="replyForm" style="margin-top:14px;">
+          <label for="replyText">রোগীর পক্ষকে রিপ্লাই দিন</label>
+          <textarea id="replyText" rows="2" placeholder="আপনার বার্তা..." required></textarea>
+          <button type="submit">রিপ্লাই পাঠান →</button>
+        </form>
+
+        <div style="margin-top:14px;">
+          <button class="btn small blue" id="addExBtn">🔄 এই অনুরোধের এক্সচেঞ্জ-ডিউ যোগ করুন</button>
+          <span class="note">স্টক থেকে রক্ত দিলে পেশেন্ট পক্ষের এক্সচেঞ্জ ব্যাগ এখান থেকে বাকি হিসেবে রাখা যায়।</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/app.js"></script>
+<script>
+  (async function init() {
+    const sess = await Auth.guard(false);
+    if (!sess) return;
+    document.querySelector('.member-shell').insertAdjacentHTML('afterbegin', sidebarHTML('inbox.html', sess));
+
+    let requestsCache = [];
+    let lastMsgByReq = {};
+    let teamProfiles = [];
+    let current = null;
+
+    const fStatus = document.getElementById('fStatus'), fTrack = document.getElementById('fTrack');
+
+    async function loadData() {
+      hidePageError();
+      try {
+        requestsCache = await SB.get('/requests?select=*&order=created_at.desc') || [];
+        const msgs = await SB.get('/messages?select=request_id,body,created_at&order=created_at.asc') || [];
+        lastMsgByReq = {};
+        msgs.forEach(m => { lastMsgByReq[m.request_id] = m; }); // asc order — শেষটাই থাকে
+        try { teamProfiles = await SB.get('/profiles?select=name,role,active&active=eq.true&order=name.asc') || []; }
+        catch (e) { teamProfiles = []; }
+      } catch (e) {
+        showPageError();
+        requestsCache = [];
+      }
+      renderList();
+    }
+
+    function renderList() {
+      let list = requestsCache.slice();
+      if (fStatus.value) list = list.filter(r => r.status === fStatus.value);
+      if (fTrack.value.trim()) list = list.filter(r => r.track_no.toLowerCase().indexOf(fTrack.value.trim().toLowerCase()) !== -1);
+      const wrap = document.getElementById('reqList');
+      wrap.innerHTML = list.length ? '' : '<p class="note">কোনো অনুরোধ নেই।</p>';
+      list.forEach(r => {
+        const lastMsg = lastMsgByReq[r.id];
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.style.cssText = 'margin-bottom:10px;cursor:pointer;padding:16px;';
+        div.innerHTML =
+          '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><strong>#' + esc(r.track_no) + '</strong>' + statusBadge(r.status) +
+          '<span style="font-size:13px;color:#777;">' + fmtDateBn(r.created_at) + '</span></div>' +
+          '<div style="font-size:14px;">' + esc(r.patient_name) + ' — <strong>' + grpDisplay(r.blood_group) + '</strong> × ' + bnDigits(r.bags_needed) + ' ব্যাগ · ' + esc(r.hospital || '—') + '<br>' +
+          'যোগাযোগ: ' + esc(r.contact_phone || '—') + (r.handled_by ? ' · দায়িত্বে: ' + esc(r.handled_by) : ' · <span style="color:#b71c1c;">দায়িত্ব কেউ নেয়নি</span>') + '</div>' +
+          (lastMsg ? '<div class="note">সর্বশেষ মেসেজ: ' + esc(String(lastMsg.body).slice(0, 80)) + (String(lastMsg.body).length > 80 ? '…' : '') + '</div>' : '');
+        div.addEventListener('click', () => openThread(r.id));
+        wrap.appendChild(div);
+      });
+    }
+
+    async function openThread(id) {
+      current = requestsCache.find(r => r.id === id);
+      if (!current) return;
+      document.getElementById('threadWrap').style.display = 'block';
+      document.getElementById('thTrack').textContent = '#' + current.track_no;
+      document.getElementById('thStatusBadge').innerHTML = statusBadge(current.status);
+      document.getElementById('thInfo').innerHTML =
+        'রোগী: <strong>' + esc(current.patient_name) + '</strong> · গ্রুপ: <strong>' + grpDisplay(current.blood_group) + '</strong> × ' + bnDigits(current.bags_needed) +
+        ' ব্যাগ · ' + esc(current.hospital || '—') + ' · যোগাযোগ: ' + esc(current.contact_phone || '—');
+      document.getElementById('thStatus').value = current.status;
+      const hSel = document.getElementById('thHandler');
+      hSel.innerHTML = '<option value="">— কেউ না —</option>';
+      teamProfiles.forEach(u => {
+        const o = document.createElement('option');
+        o.value = u.name; o.textContent = u.name + (u.role === 'admin' ? ' (Admin)' : '');
+        if (current.handled_by === u.name) o.selected = true;
+        hSel.appendChild(o);
+      });
+      if (current.handled_by && !teamProfiles.some(u => u.name === current.handled_by)) {
+        const o = document.createElement('option');
+        o.value = current.handled_by; o.textContent = current.handled_by; o.selected = true;
+        hSel.appendChild(o);
+      }
+      await renderMsgs();
+      document.getElementById('threadWrap').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function renderMsgs() {
+      const box = document.getElementById('thMsgs');
+      box.innerHTML = '<p class="note">লোড হচ্ছে…</p>';
+      try {
+        const msgs = await SB.get('/messages?select=sender,sender_name,body,created_at&request_id=eq.' + encodeURIComponent(current.id) + '&order=created_at.asc') || [];
+        box.innerHTML = msgs.length ? '' : '<p class="note">এখনো কোনো মেসেজ নেই।</p>';
+        msgs.forEach(m => {
+          const who = m.sender === 'patient' ? 'রোগীর পক্ষ' : 'টিম' + (m.sender_name ? ' (' + esc(m.sender_name) + ')' : '');
+          const d = document.createElement('div');
+          d.className = 'msg ' + m.sender;
+          d.innerHTML = '<strong>' + who + ':</strong> ' + esc(m.body) + '<div class="meta">' + fmtDateBn(m.created_at) + '</div>';
+          box.appendChild(d);
+          if (m.body) lastMsgByReq[current.id] = m;
+        });
+      } catch (e) {
+        box.innerHTML = '<p class="note">মেসেজ লোড করা যায়নি, আবার চেষ্টা করুন।</p>';
+      }
+    }
+
+    document.getElementById('thStatus').addEventListener('change', async e => {
+      if (!current) return;
+      try {
+        await SB.update('/requests?id=eq.' + encodeURIComponent(current.id), { status: e.target.value });
+        current.status = e.target.value;
+        document.getElementById('thStatusBadge').innerHTML = statusBadge(current.status);
+        renderList();
+      } catch (err) { alert('স্ট্যাটাস বদলানো যায়নি, আবার চেষ্টা করুন।'); e.target.value = current.status; }
+    });
+    document.getElementById('thHandler').addEventListener('change', async e => {
+      if (!current) return;
+      try {
+        await SB.update('/requests?id=eq.' + encodeURIComponent(current.id), { handled_by: e.target.value || null });
+        current.handled_by = e.target.value || null;
+        renderList();
+      } catch (err) { alert('দায়িত্ব সেভ করা যায়নি, আবার চেষ্টা করুন।'); }
+    });
+    document.getElementById('replyForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const t = document.getElementById('replyText').value.trim();
+      if (!t || !current) return;
+      try {
+        const r = await SB.rpc('post_team_message', { p_request_id: current.id, p_body: t, p_by: sess.name });
+        if (r && r.ok === false) { alert(r.error || 'রিপ্লাই পাঠানো যায়নি।'); return; }
+        document.getElementById('replyText').value = '';
+        await renderMsgs();
+        renderList();
+      } catch (err) { alert('রিপ্লাই পাঠানো যায়নি, আবার চেষ্টা করুন।'); }
+    });
+    document.getElementById('addExBtn').addEventListener('click', async () => {
+      if (!current) return;
+      const due = prompt('কোন গ্রুপের এক্সচেঞ্জ ব্যাগ বাকি থাকবে? (যেমন B+, O-)', current.blood_group);
+      if (!due) return;
+      const g = due.trim().toUpperCase();
+      if (!GROUPS.includes(g)) { alert('সঠিক গ্রুপ লিখুন (A+, A-, B+, B-, O+, O-, AB+, AB-)'); return; }
+      try {
+        await SB.insert('exchanges', { request_id: current.id, due_group: g, bags: 1, created_by: sess.name });
+        alert('এক্সচেঞ্জ-ডিউ যোগ হয়েছে — এক্সচেঞ্জ পেজে দেখতে পাবেন।');
+      } catch (err) { alert('যোগ করা যায়নি, আবার চেষ্টা করুন।'); }
+    });
+
+    fStatus.addEventListener('change', renderList);
+    fTrack.addEventListener('input', renderList);
+
+    await loadData();
+
+    // ?id=SB-1042 দিয়ে সরাসরি থ্রেড খোলা
+    const p = new URLSearchParams(location.search);
+    if (p.get('id')) {
+      const want = p.get('id').trim().toUpperCase();
+      let r = requestsCache.find(x => x.track_no.toUpperCase() === want);
+      if (!r) {
+        try {
+          const rows = await SB.get('/requests?select=*&track_no=eq.' + encodeURIComponent(want));
+          if (rows && rows[0]) { requestsCache.unshift(rows[0]); r = rows[0]; renderList(); }
+        } catch (e) { /* ignore */ }
+      }
+      if (r) openThread(r.id);
+    }
+  })();
+</script>
+</body>
+</html>

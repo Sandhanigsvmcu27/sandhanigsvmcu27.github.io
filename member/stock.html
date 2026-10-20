@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>স্টক ম্যানেজমেন্ট — সন্ধানী মেম্বার এরিয়া</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="member-shell">
+  <div class="member-main">
+    <h2 class="page">🧊 ব্লাড স্টক ম্যানেজমেন্ট</h2>
+    <div class="err" id="pageErr" style="display:none;"></div>
+    <div class="okbox" id="savedMsg" style="display:none;">✅ স্টক আপডেট হয়েছে — পাবলিক স্টক বোর্ডেও নতুন সংখ্যা দেখাবে।</div>
+
+    <div class="card">
+      <form class="f" id="stockForm">
+        <table class="t">
+          <thead><tr><th>ব্লাড গ্রুপ</th><th>ব্যাগ সংখ্যা</th><th>সর্বশেষ আপডেট</th></tr></thead>
+          <tbody id="stockBody"></tbody>
+        </table>
+        <button type="submit" style="margin-top:14px;">স্টক সেভ করুন →</button>
+      </form>
+      <p class="note">প্রতিটি গ্রুপের লাইভ সংখ্যা লিখে সেভ করলেই পাবলিক হোমপেজের স্টক বোর্ড আপডেট হয়ে যাবে। কে কখন আপডেট করল তার রেকর্ড থাকবে।</p>
+    </div>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/app.js"></script>
+<script>
+  (async function init() {
+    const sess = await Auth.guard(false);
+    if (!sess) return;
+    document.querySelector('.member-shell').insertAdjacentHTML('afterbegin', sidebarHTML('stock.html', sess));
+    const tb = document.getElementById('stockBody');
+    let loaded = {};
+
+    async function loadStock() {
+      hidePageError();
+      try {
+        const rows = await SB.get('/stock?select=blood_group,bags,updated_at,updated_by') || [];
+        loaded = {};
+        rows.forEach(r => { loaded[r.blood_group] = r; });
+      } catch (e) {
+        showPageError();
+        loaded = {};
+      }
+      tb.innerHTML = '';
+      GROUPS.forEach(g => {
+        const s = loaded[g] || { bags: 0, updated_at: null, updated_by: '' };
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td><strong>' + grpDisplay(g) + '</strong></td>' +
+          '<td><input type="number" min="0" max="999" value="' + (s.bags || 0) + '" id="st_' + g + '" style="padding:8px;border:1px solid #ccc;border-radius:6px;width:110px;"></td>' +
+          '<td style="font-size:13px;color:#555;">' + (s.updated_at ? fmtDateBn(s.updated_at) + (s.updated_by ? ' — ' + esc(s.updated_by) : '') : '—') + '</td>';
+        tb.appendChild(tr);
+      });
+    }
+
+    document.getElementById('stockForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      try {
+        for (const g of GROUPS) {
+          const el = document.getElementById('st_' + g);
+          if (!el) continue;
+          let v = parseInt(el.value, 10);
+          if (isNaN(v) || v < 0) v = 0;
+          if (loaded[g] && loaded[g].bags === v) continue; // বদলায়নি — PATCH দরকার নেই
+          if (!loaded[g] && v === 0) continue;
+          await SB.update('/stock?blood_group=eq.' + encodeURIComponent(g), {
+            bags: v, updated_by: sess.name, updated_at: new Date().toISOString()
+          });
+        }
+        await loadStock();
+        const m = document.getElementById('savedMsg');
+        m.style.display = 'block';
+        m.scrollIntoView({ behavior: 'smooth' });
+      } catch (err) {
+        showPageError('স্টক সেভ করা যায়নি, আবার চেষ্টা করুন।');
+      }
+    });
+
+    loadStock();
+  })();
+</script>
+</body>
+</html>

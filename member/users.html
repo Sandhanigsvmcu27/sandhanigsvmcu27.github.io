@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ইউজার ম্যানেজমেন্ট — সন্ধানী মেম্বার এরিয়া</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="member-shell">
+  <div class="member-main">
+    <h2 class="page">👥 ইউজার ম্যানেজমেন্ট <span class="tag">শুধু অ্যাডমিন</span></h2>
+    <div class="err" id="pageErr" style="display:none;"></div>
+
+    <div class="card" style="margin-bottom:18px;">
+      <h4 style="margin-bottom:10px;">➕ নতুন টিম মেম্বার যোগ করা</h4>
+      <div class="okbox">
+        নতুন লগইন অ্যাকাউন্ট এই পেজ থেকে তৈরি করা যায় না — নিরাপত্তার কারণে অ্যাকাউন্ট তৈরি হয়
+        <strong>Supabase Dashboard → Authentication → Users → Add user</strong> থেকে।
+        অ্যাকাউন্ট তৈরি ও প্রোফাইল যোগ হলে এখানে তাদের <strong>রোল</strong> (টিম/অ্যাডমিন) ও
+        <strong>সক্রিয় অবস্থা</strong> বদলাতে পারবেন।
+      </div>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <table class="t">
+        <thead><tr><th>নাম</th><th>ইমেইল</th><th>ফোন</th><th>রোল</th><th>অবস্থা</th><th>অ্যাকশন</th></tr></thead>
+        <tbody id="userBody"></tbody>
+      </table>
+    </div>
+    <p class="note">নিষ্ক্রিয় (deactivate) করা মেম্বার আর লগইন করতে পারবে না — ডোনার লিস্টও দেখতে পারবে না।</p>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/app.js"></script>
+<script>
+  (async function init() {
+    const sess = await Auth.guard(true); // admin only
+    if (!sess) return;
+    document.querySelector('.member-shell').insertAdjacentHTML('afterbegin', sidebarHTML('users.html', sess));
+
+    let profilesCache = [];
+
+    async function loadProfiles() {
+      hidePageError();
+      try {
+        profilesCache = await SB.get('/profiles?select=id,name,email,phone,role,active&order=name.asc') || [];
+      } catch (e) {
+        showPageError();
+        profilesCache = [];
+      }
+      render();
+    }
+
+    function render() {
+      const tb = document.getElementById('userBody');
+      tb.innerHTML = '';
+      profilesCache.forEach(u => {
+        const isSelf = u.id === sess.userId;
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td><strong>' + esc(u.name) + '</strong></td>' +
+          '<td>' + esc(u.email || '—') + '</td>' +
+          '<td>' + esc(u.phone || '—') + '</td>' +
+          '<td>' + (isSelf
+            ? (u.role === 'admin' ? '<span class="badge red">অ্যাডমিন</span>' : '<span class="badge new">টিম</span>')
+            : '<select data-role="' + u.id + '" style="padding:6px;border:1px solid #ccc;border-radius:6px;">' +
+              '<option value="team"' + (u.role === 'team' ? ' selected' : '') + '>টিম মেম্বার</option>' +
+              '<option value="admin"' + (u.role === 'admin' ? ' selected' : '') + '>অ্যাডমিন</option></select>') + '</td>' +
+          '<td>' + (u.active ? '<span class="badge ok">সক্রিয়</span>' : '<span class="badge gray">নিষ্ক্রিয়</span>') + '</td>' +
+          '<td>' + (isSelf ? '— (আপনি)' : '<button class="btn small ' + (u.active ? 'gray' : 'green') + '" data-toggle="' + u.id + '">' + (u.active ? 'নিষ্ক্রিয় করুন' : 'সক্রিয় করুন') + '</button>') + '</td>';
+        tb.appendChild(tr);
+      });
+      if (!profilesCache.length) tb.innerHTML = '<tr><td colspan="6" class="note">কোনো প্রোফাইল পাওয়া যায়নি।</td></tr>';
+    }
+
+    document.querySelector('#userBody').addEventListener('click', async e => {
+      const b = e.target.closest('[data-toggle]');
+      if (!b) return;
+      const u = profilesCache.find(x => x.id === b.getAttribute('data-toggle'));
+      if (!u) return;
+      try {
+        await SB.update('/profiles?id=eq.' + encodeURIComponent(u.id), { active: !u.active });
+        u.active = !u.active;
+        render();
+      } catch (err) { alert('বদলানো যায়নি, আবার চেষ্টা করুন।'); }
+    });
+
+    document.querySelector('#userBody').addEventListener('change', async e => {
+      const sel = e.target.closest('[data-role]');
+      if (!sel) return;
+      const u = profilesCache.find(x => x.id === sel.getAttribute('data-role'));
+      if (!u || sel.value === u.role) return;
+      try {
+        await SB.update('/profiles?id=eq.' + encodeURIComponent(u.id), { role: sel.value });
+        u.role = sel.value;
+        render();
+      } catch (err) { alert('রোল বদলানো যায়নি, আবার চেষ্টা করুন।'); sel.value = u.role; }
+    });
+
+    loadProfiles();
+  })();
+</script>
+</body>
+</html>

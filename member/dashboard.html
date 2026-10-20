@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ড্যাশবোর্ড — সন্ধানী মেম্বার এরিয়া</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="member-shell">
+  <div class="member-main">
+    <h2 class="page">📊 ড্যাশবোর্ড</h2>
+    <div class="err" id="pageErr" style="display:none;"></div>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="grid2">
+      <div class="card">
+        <h4 style="margin-bottom:10px;">📅 আসন্ন প্রতিশ্রুত ডোনেশন (ফলো-আপ)</h4>
+        <div id="promisedList"></div>
+      </div>
+      <div class="card">
+        <h4 style="margin-bottom:10px;">🆕 সাম্প্রতিক অনুরোধ</h4>
+        <div id="recentReq"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/app.js"></script>
+<script>
+  (async function init() {
+    const sess = await Auth.guard(false);
+    if (!sess) return; // redirect হয়েছে
+    document.querySelector('.member-shell').insertAdjacentHTML('afterbegin', sidebarHTML('dashboard.html', sess));
+
+    try {
+      // Summary counts — Prefer: count=exact দিয়ে (হালকা select)
+      const [newCount, progCount, donorCount, exPending, stockRows] = await Promise.all([
+        SB.count('/requests?select=id&status=eq.new'),
+        SB.count('/requests?select=id&status=eq.in-progress'),
+        SB.count('/donors?select=id'),
+        SB.count('/exchanges?select=id&received=eq.false'),
+        SB.get('/stock?select=bags')
+      ]);
+      const pending = (newCount || 0) + (progCount || 0);
+      const totalBags = (stockRows || []).reduce((s, r) => s + (r.bags || 0), 0);
+      document.getElementById('stats').innerHTML =
+        '<div class="stat"><div class="num">' + bnDigits(pending) + '</div><div class="lbl">পেন্ডিং অনুরোধ</div></div>' +
+        '<div class="stat"><div class="num">' + bnDigits(donorCount || 0) + '</div><div class="lbl">মোট ডোনার</div></div>' +
+        '<div class="stat"><div class="num">' + bnDigits(totalBags) + '</div><div class="lbl">মোট স্টক (ব্যাগ)</div></div>' +
+        '<div class="stat"><div class="num">' + bnDigits(exPending || 0) + '</div><div class="lbl">বাকি এক্সচেঞ্জ</div></div>';
+    } catch (e) {
+      showPageError('সারাংশ লোড করা যায়নি, আবার চেষ্টা করুন।');
+    }
+
+    try {
+      const promised = await SB.get('/donors?select=name,blood_group,phone,promised_date&promised_date=gte.' + isoToday() + '&order=promised_date.asc');
+      document.getElementById('promisedList').innerHTML = (promised && promised.length)
+        ? promised.map(d => '<div style="font-size:14px;margin-bottom:8px;">📅 <strong>' + esc(d.name) + '</strong> (' + grpDisplay(d.blood_group) + ') — <strong>' + fmtDateBn(d.promised_date) + '</strong>' +
+            (d.phone ? ' <a class="btn small green" href="tel:' + esc(String(d.phone).replace(/[^0-9+]/g, '')) + '" style="margin-left:6px;">📞 কল</a>' : ' <span class="note">নম্বর নেই</span>') + '</div>').join('')
+        : '<p class="note">কোনো প্রতিশ্রুত ডোনেশন নেই।</p>';
+    } catch (e) {
+      document.getElementById('promisedList').innerHTML = '<p class="note">তালিকা লোড করা যায়নি।</p>';
+    }
+
+    try {
+      const recent = await SB.get('/requests?select=track_no,patient_name,blood_group,bags_needed,status,created_at&order=created_at.desc&limit=5');
+      document.getElementById('recentReq').innerHTML = (recent && recent.length) ? recent.map(r =>
+        '<div style="font-size:14px;margin-bottom:8px;">' + statusBadge(r.status) + ' <strong>#' + esc(r.track_no) + '</strong> ' +
+        esc(r.patient_name) + ' — ' + grpDisplay(r.blood_group) + ' × ' + bnDigits(r.bags_needed) + '<br><span style="color:#777;font-size:12px;">' + fmtDateBn(r.created_at) + '</span></div>'
+      ).join('') : '<p class="note">এখনো কোনো অনুরোধ আসেনি।</p>';
+    } catch (e) {
+      document.getElementById('recentReq').innerHTML = '<p class="note">তালিকা লোড করা যায়নি।</p>';
+    }
+  })();
+</script>
+</body>
+</html>

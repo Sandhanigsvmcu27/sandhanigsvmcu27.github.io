@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>এক্সচেঞ্জ ট্র্যাকিং — সন্ধানী মেম্বার এরিয়া</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="member-shell">
+  <div class="member-main">
+    <h2 class="page">🔄 এক্সচেঞ্জ ট্র্যাকিং</h2>
+    <div class="err" id="pageErr" style="display:none;"></div>
+
+    <div class="card" style="margin-bottom:18px;">
+      <h4 style="margin-bottom:10px;">➕ নতুন এক্সচেঞ্জ-ডিউ যোগ করুন</h4>
+      <form class="f" id="addExForm">
+        <div class="grid2">
+          <div>
+            <label>কোন অনুরোধের বিপরীতে</label>
+            <select id="exReq"></select>
+          </div>
+          <div>
+            <label>কোন গ্রুপের ব্যাগ বাকি</label>
+            <select id="exGroup"></select>
+          </div>
+        </div>
+        <button type="submit">যোগ করুন →</button>
+      </form>
+      <p class="note">নিয়ম: প্রয়োজনীয় গ্রুপের এক ব্যাগ রক্তের জন্য অন্য যেকোন গ্রুপের এক ব্যাগ রক্ত বিনিময় হিসেবে নেওয়া হয়।</p>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <table class="t">
+        <thead><tr><th>ট্র্যাক নম্বর</th><th>রোগী</th><th>বাকি গ্রুপ</th><th>তৈরির তারিখ</th><th>অবস্থা</th><th>অ্যাকশন</th></tr></thead>
+        <tbody id="exBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/app.js"></script>
+<script>
+  (async function init() {
+    const sess = await Auth.guard(false);
+    if (!sess) return;
+    document.querySelector('.member-shell').insertAdjacentHTML('afterbegin', sidebarHTML('exchange.html', sess));
+
+    const exReq = document.getElementById('exReq'), exGroup = document.getElementById('exGroup');
+    GROUPS.forEach(g => { const o = document.createElement('option'); o.value = g; o.textContent = grpDisplay(g); exGroup.appendChild(o); });
+
+    let exchangesCache = [];
+    let reqById = {};
+
+    async function loadData() {
+      hidePageError();
+      try {
+        const [exs, reqs] = await Promise.all([
+          SB.get('/exchanges?select=*&order=created_at.desc'),
+          SB.get('/requests?select=id,track_no,patient_name,blood_group,status')
+        ]);
+        exchangesCache = exs || [];
+        reqById = {};
+        (reqs || []).forEach(r => { reqById[r.id] = r; });
+        exReq.innerHTML = '';
+        (reqs || []).filter(r => r.status === 'new' || r.status === 'in-progress').forEach(r => {
+          const o = document.createElement('option');
+          o.value = r.id; o.textContent = '#' + r.track_no + ' — ' + r.patient_name + ' (' + grpDisplay(r.blood_group) + ')';
+          exReq.appendChild(o);
+        });
+      } catch (e) {
+        showPageError();
+        exchangesCache = [];
+      }
+      render();
+    }
+
+    function render() {
+      const tb = document.getElementById('exBody');
+      tb.innerHTML = '';
+      const list = exchangesCache.slice().sort((a, b) =>
+        ((a.received ? 1 : 0) - (b.received ? 1 : 0)) || String(b.created_at).localeCompare(String(a.created_at)));
+      list.forEach(x => {
+        const r = x.request_id ? reqById[x.request_id] : null;
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td><strong>#' + (r ? esc(r.track_no) : '—') + '</strong></td>' +
+          '<td>' + esc(r ? r.patient_name : '—') + '</td>' +
+          '<td><strong>' + grpDisplay(x.due_group) + '</strong> × ' + bnDigits(x.bags) + ' ব্যাগ</td>' +
+          '<td>' + fmtDateBn(x.created_at) + '</td>' +
+          '<td>' + (x.received ? '<span class="badge ok">গৃহীত (' + fmtDateBn(x.received_at) + ')</span>' : '<span class="badge wait">বাকি আছে</span>') + '</td>' +
+          '<td>' + (x.received ? '—' : '<button class="btn small green" data-recv="' + x.id + '">✅ গ্রহণ করুন</button>') + '</td>';
+        tb.appendChild(tr);
+      });
+      if (!list.length) tb.innerHTML = '<tr><td colspan="6" class="note">কোনো এক্সচেঞ্জ রেকর্ড নেই।</td></tr>';
+    }
+
+    document.querySelector('#exBody').addEventListener('click', async e => {
+      const b = e.target.closest('[data-recv]');
+      if (!b) return;
+      const x = exchangesCache.find(xx => xx.id === b.getAttribute('data-recv'));
+      if (!x) return;
+      b.disabled = true;
+      try {
+        await SB.update('/exchanges?id=eq.' + encodeURIComponent(x.id), {
+          received: true, received_at: new Date().toISOString()
+        });
+        // প্রাপ্ত ব্যাগ স্টকে যোগ
+        const srows = await SB.get('/stock?select=blood_group,bags&blood_group=eq.' + encodeURIComponent(x.due_group));
+        const cur = (srows && srows[0]) ? srows[0].bags : 0;
+        await SB.update('/stock?blood_group=eq.' + encodeURIComponent(x.due_group), {
+          bags: cur + (x.bags || 1), updated_by: sess.name, updated_at: new Date().toISOString()
+        });
+        await loadData();
+        alert('এক্সচেঞ্জ গ্রহণ করা হয়েছে — ' + grpDisplay(x.due_group) + ' স্টকে ' + bnDigits(x.bags || 1) + ' ব্যাগ যোগ হয়েছে।');
+      } catch (err) {
+        showPageError('গ্রহণ সেভ করা যায়নি, আবার চেষ্টা করুন।');
+        b.disabled = false;
+      }
+    });
+
+    document.getElementById('addExForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      if (!exReq.value) { alert('আগে একটি অনুরোধ বেছে নিন।'); return; }
+      try {
+        await SB.insert('exchanges', { request_id: exReq.value, due_group: exGroup.value, bags: 1, created_by: sess.name });
+        await loadData();
+        alert('এক্সচেঞ্জ-ডিউ যোগ হয়েছে।');
+      } catch (err) { alert('যোগ করা যায়নি, আবার চেষ্টা করুন।'); }
+    });
+
+    loadData();
+  })();
+</script>
+</body>
+</html>
