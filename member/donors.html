@@ -26,11 +26,6 @@
       <select id="fBatch">
         <option value="">সব ব্যাচ</option>
       </select>
-      <select id="fGender">
-        <option value="">ছেলে / মেয়ে (সব)</option>
-        <option value="male">ছেলে</option>
-        <option value="female">মেয়ে</option>
-      </select>
       <input type="text" id="fArea" placeholder="এলাকা লিখুন (যেমন: সাভার)">
       <input type="text" id="fName" placeholder="নাম দিয়ে খুঁজুন">
       <label style="font-size:14px;"><input type="checkbox" id="fEligible"> শুধু Eligible</label>
@@ -59,10 +54,7 @@
           <div><label>এলাকা</label><input type="text" id="ndArea" required></div>
           <div><label>ফোন</label><input type="tel" id="ndPhone" required placeholder="01XXXXXXXXX"></div>
         </div>
-        <div class="grid2">
-          <div><label>ব্যাচ (যেমন: MBBS 30)</label><input type="text" id="ndBatch" placeholder="MBBS 30"></div>
-          <div><label>লিঙ্গ</label><select id="ndGender"><option value="">—</option><option value="male">ছেলে</option><option value="female">মেয়ে</option></select></div>
-        </div>
+        <div><label>ব্যাচ (যেমন: MBBS 30)</label><input type="text" id="ndBatch" placeholder="MBBS 30"></div>
         <div><label>নোট (ঐচ্ছিক)</label><input type="text" id="ndNotes"></div>
         <button type="submit">ডোনার যোগ করুন →</button>
       </form>
@@ -112,7 +104,7 @@
     document.querySelector('.member-shell').insertAdjacentHTML('afterbegin', sidebarHTML('donors.html', sess));
 
     const fGroup = document.getElementById('fGroup'), fCategory = document.getElementById('fCategory'),
-          fBatch = document.getElementById('fBatch'), fGender = document.getElementById('fGender'),
+          fBatch = document.getElementById('fBatch'),
           fArea = document.getElementById('fArea'), fName = document.getElementById('fName'),
           fEligible = document.getElementById('fEligible');
     GROUPS.forEach(g => { const o = document.createElement('option'); o.value = g; o.textContent = grpDisplay(g); fGroup.appendChild(o); });
@@ -127,7 +119,6 @@
 
     const OUTCOME_BN = { donated: '✅ সম্প্রতি দিয়েছে', promised: '📅 অমুক তারিখে দেবে', not_reachable: '📵 ধরেনি', declined: '❌ এবার দেবে না', note: '📝 নোট' };
     const CAT_BN = { medical_student: 'মেডিকেল শিক্ষার্থী', non_medical: 'নন-মেডিকেল', other: 'অন্যান্য' };
-    const GENDER_BN = { male: 'ছেলে', female: 'মেয়ে' };
     let outcomeDonorId = null;
     let donorsCache = [];
     let categoryOk = true; // live DB-তে category column আছে; না থাকলে fallback
@@ -135,13 +126,12 @@
     function telHref(phone) { return 'tel:' + String(phone).replace(/[^0-9+]/g, ''); }
 
     function donorQuery(withCategory) {
-      const cols = 'id,name,phone,blood_group,batch,gender,area,last_donation_date,promised_date,verified,notes' + (withCategory ? ',category' : '');
+      const cols = 'id,name,phone,blood_group,batch,area,last_donation_date,promised_date,verified,notes' + (withCategory ? ',category' : '');
       const q = new URLSearchParams();
       q.set('select', cols);
       if (fGroup.value) q.set('blood_group', 'eq.' + fGroup.value);
       if (withCategory && fCategory.value) q.set('category', 'eq.' + fCategory.value);
       if (fBatch.value) q.set('batch', 'eq.' + fBatch.value);
-      if (fGender.value) q.set('gender', 'eq.' + fGender.value);
       if (fArea.value.trim()) q.set('area', 'ilike.*' + fArea.value.trim() + '*');
       if (fName.value.trim()) q.set('name', 'ilike.*' + fName.value.trim() + '*');
       q.set('order', 'blood_group.asc,batch.desc,name.asc');
@@ -187,7 +177,7 @@
         const badge = st.eligible
           ? '<span class="badge ok">Eligible</span>'
           : '<span class="badge wait">' + fmtDateBn(st.eligibleDate) + ' পর্যন্ত বিরতি</span>';
-        const sub = [d.batch, (d.category && CAT_BN[d.category]) || d.category, d.gender && GENDER_BN[d.gender]].filter(Boolean).map(esc).join(' · ');
+        const sub = [d.batch, (d.category && CAT_BN[d.category]) || d.category].filter(Boolean).map(esc).join(' · ');
         const tr = document.createElement('tr');
         tr.innerHTML =
           '<td><strong>' + esc(d.name) + '</strong>' + (d.verified ? ' <span class="badge ok">✔ যাচাইকৃত</span>' : '') + (sub ? '<br><span style="font-size:12px;color:#777;">' + sub + '</span>' : '') +
@@ -209,7 +199,7 @@
 
     document.getElementById('fSearch').addEventListener('click', loadDonors);
     document.getElementById('fEligible').addEventListener('change', render);
-    document.getElementById('fClear').addEventListener('click', () => { fGroup.value = ''; fCategory.value = ''; fBatch.value = ''; fGender.value = ''; fArea.value = ''; fName.value = ''; fEligible.checked = false; loadDonors(); });
+    document.getElementById('fClear').addEventListener('click', () => { fGroup.value = ''; fCategory.value = ''; fBatch.value = ''; fArea.value = ''; fName.value = ''; fEligible.checked = false; loadDonors(); });
 
     // outcome modal
     const modal = document.getElementById('outcomeModal');
@@ -286,7 +276,6 @@
           area: document.getElementById('ndArea').value.trim(),
           phone: document.getElementById('ndPhone').value.trim(),
           batch: document.getElementById('ndBatch').value.trim() || null,
-          gender: document.getElementById('ndGender').value || null,
           notes: document.getElementById('ndNotes').value.trim()
         });
         e.target.reset();
