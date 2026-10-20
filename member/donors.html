@@ -86,6 +86,38 @@
   </div>
 </div>
 
+<!-- donor edit modal -->
+<div id="editModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:50;overflow-y:auto;">
+  <div class="card" style="max-width:520px;margin:40px auto;">
+    <h4 id="edTitle" style="margin-bottom:12px;">✏️ ডোনার সংশোধন</h4>
+    <form class="f" id="editForm">
+      <div class="grid2">
+        <div><label>নাম</label><input type="text" id="edName" required></div>
+        <div><label>ব্লাড গ্রুপ</label><select id="edGroup"></select></div>
+      </div>
+      <div class="grid2">
+        <div><label>ফোন</label><input type="tel" id="edPhone" placeholder="01XXXXXXXXX"></div>
+        <div><label>ব্যাচ</label><input type="text" id="edBatch" placeholder="MBBS 30"></div>
+      </div>
+      <div class="grid2">
+        <div><label>এলাকা</label><input type="text" id="edArea"></div>
+        <div><label>ধরন</label><select id="edCategory">
+          <option value="medical_student">মেডিকেল শিক্ষার্থী</option>
+          <option value="non_medical">নন-মেডিকেল</option>
+          <option value="other">অন্যান্য</option>
+        </select></div>
+      </div>
+      <div><label>নোট</label><input type="text" id="edNotes"></div>
+      <label style="font-size:14px;display:block;margin:8px 0;"><input type="checkbox" id="edVerified"> ✔ যাচাইকৃত হিসেবে চিহ্নিত করুন</label>
+      <p class="note">ব্লাড গ্রুপ বদলালে কে বদলালেন তা রেকর্ডে থেকে যাবে।</p>
+      <div style="display:flex;gap:10px;">
+        <button type="submit" class="btn green">সেভ করুন</button>
+        <button type="button" class="btn gray" id="edCancel">বাতিল</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- call history modal -->
 <div id="histModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:50;">
   <div class="card" style="max-width:560px;margin:60px auto;max-height:80vh;overflow-y:auto;">
@@ -116,17 +148,20 @@
     } catch (e) { /* ব্যাচ তালিকা না এলেও বাকি ফিল্টার চলবে */ }
     const ndGroup = document.getElementById('ndGroup');
     GROUPS.forEach(g => { const o = document.createElement('option'); o.value = g; o.textContent = grpDisplay(g); ndGroup.appendChild(o); });
+    const edGroup = document.getElementById('edGroup');
+    GROUPS.forEach(g => { const o = document.createElement('option'); o.value = g; o.textContent = grpDisplay(g); edGroup.appendChild(o); });
 
     const OUTCOME_BN = { donated: '✅ সম্প্রতি দিয়েছে', promised: '📅 অমুক তারিখে দেবে', not_reachable: '📵 ধরেনি', declined: '❌ এবার দেবে না', note: '📝 নোট' };
     const CAT_BN = { medical_student: 'মেডিকেল শিক্ষার্থী', non_medical: 'নন-মেডিকেল', other: 'অন্যান্য' };
     let outcomeDonorId = null;
+    let editDonorId = null;
     let donorsCache = [];
     let categoryOk = true; // live DB-তে category column আছে; না থাকলে fallback
 
     function telHref(phone) { return 'tel:' + String(phone).replace(/[^0-9+]/g, ''); }
 
     function donorQuery(withCategory) {
-      const cols = 'id,name,phone,blood_group,batch,area,last_donation_date,promised_date,verified,notes' + (withCategory ? ',category' : '');
+      const cols = 'id,name,phone,blood_group,batch,area,last_donation_date,promised_date,verified,notes,edit_log' + (withCategory ? ',category' : '');
       const q = new URLSearchParams();
       q.set('select', cols);
       if (fGroup.value) q.set('blood_group', 'eq.' + fGroup.value);
@@ -181,14 +216,15 @@
         const tr = document.createElement('tr');
         tr.innerHTML =
           '<td><strong>' + esc(d.name) + '</strong>' + (d.verified ? ' <span class="badge ok">✔ যাচাইকৃত</span>' : '') + (sub ? '<br><span style="font-size:12px;color:#777;">' + sub + '</span>' : '') +
-            (d.promised_date && d.promised_date >= isoToday() ? '<br><span class="badge new">📅 ' + fmtDateBn(d.promised_date) + ' দেবে</span>' : '') + '</td>' +
+            (d.promised_date && d.promised_date >= isoToday() ? '<br><span class="badge new">📅 ' + fmtDateBn(d.promised_date) + ' দেবে</span>' : '') +
+            (d.edit_log ? '<br><span style="font-size:12px;color:#999;">✏️ ' + esc(String(d.edit_log).trim().split('\n').pop()) + '</span>' : '') + '</td>' +
           '<td><strong>' + grpDisplay(d.blood_group) + '</strong></td>' +
           '<td>' + esc(d.area || '—') + '</td>' +
           '<td>' + (d.phone ? '<a href="' + telHref(d.phone) + '">' + esc(d.phone) + '</a>' : '<span style="color:#999;">নম্বর নেই</span>') + '</td>' +
           '<td>' + (d.last_donation_date ? fmtDateBn(d.last_donation_date) : '—') + '</td>' +
           '<td>' + badge + '</td>' +
           '<td>' + (d.phone ? '<a class="btn small green" href="' + telHref(d.phone) + '">📞 কল</a>' : '<span style="color:#999;">নম্বর নেই</span>') + '</td>' +
-          '<td style="white-space:nowrap;"><button class="btn small blue" data-outcome="' + d.id + '">📝 ফলাফল</button> <button class="btn small gray" data-hist="' + d.id + '">📜 ইতিহাস</button></td>';
+          '<td style="white-space:nowrap;"><button class="btn small blue" data-outcome="' + d.id + '">📝 ফলাফল</button> <button class="btn small gray" data-hist="' + d.id + '">📜 ইতিহাস</button> <button class="btn small" data-edit="' + d.id + '">✏️ সংশোধন</button></td>';
         tb.appendChild(tr);
       });
       if (!list.length) {
@@ -204,7 +240,8 @@
     // outcome modal
     const modal = document.getElementById('outcomeModal');
     document.querySelector('#donorTable tbody').addEventListener('click', e => {
-      const ob = e.target.closest('[data-outcome]'), hb = e.target.closest('[data-hist]');
+      const ob = e.target.closest('[data-outcome]'), hb = e.target.closest('[data-hist]'), eb = e.target.closest('[data-edit]');
+      if (eb) { openEdit(eb.getAttribute('data-edit')); return; }
       if (ob) {
         outcomeDonorId = ob.getAttribute('data-outcome');
         const d = donorsCache.find(x => x.id === outcomeDonorId);
@@ -244,6 +281,53 @@
         modal.style.display = 'none';
         await loadDonors();
         alert('ফলাফল সেভ হয়েছে।');
+      } catch (err) {
+        alert('সেভ করা যায়নি, আবার চেষ্টা করুন।');
+      }
+    });
+
+    // donor edit (সংশোধন)
+    const editModal = document.getElementById('editModal');
+    function openEdit(donorId) {
+      const d = donorsCache.find(x => x.id === donorId);
+      if (!d) return;
+      editDonorId = donorId;
+      document.getElementById('edTitle').textContent = '✏️ ডোনার সংশোধন — ' + d.name;
+      document.getElementById('edName').value = d.name || '';
+      edGroup.value = d.blood_group;
+      document.getElementById('edPhone').value = d.phone || '';
+      document.getElementById('edBatch').value = d.batch || '';
+      document.getElementById('edArea').value = d.area || '';
+      document.getElementById('edCategory').value = d.category || 'medical_student';
+      document.getElementById('edNotes').value = d.notes || '';
+      document.getElementById('edVerified').checked = !!d.verified;
+      editModal.style.display = 'block';
+    }
+    document.getElementById('edCancel').addEventListener('click', () => { editModal.style.display = 'none'; });
+    document.getElementById('editForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const d = donorsCache.find(x => x.id === editDonorId);
+      if (!d) return;
+      const payload = {
+        name: document.getElementById('edName').value.trim(),
+        blood_group: edGroup.value,
+        phone: document.getElementById('edPhone').value.trim() || null,
+        batch: document.getElementById('edBatch').value.trim() || null,
+        area: document.getElementById('edArea').value.trim() || null,
+        category: document.getElementById('edCategory').value,
+        notes: document.getElementById('edNotes').value.trim(),
+        verified: document.getElementById('edVerified').checked
+      };
+      if (!payload.name) { alert('নাম খালি রাখা যাবে না।'); return; }
+      if (payload.blood_group !== d.blood_group) {
+        const line = isoToday() + ' · blood group ' + grpDisplay(d.blood_group) + ' → ' + grpDisplay(payload.blood_group) + ' · সংশোধন: ' + (sess.name || '');
+        payload.edit_log = d.edit_log ? (d.edit_log + '\n' + line) : line;
+      }
+      try {
+        await SB.update('/donors?id=eq.' + encodeURIComponent(d.id), payload);
+        editModal.style.display = 'none';
+        await loadDonors();
+        alert('সংশোধন সেভ হয়েছে।');
       } catch (err) {
         alert('সেভ করা যায়নি, আবার চেষ্টা করুন।');
       }
