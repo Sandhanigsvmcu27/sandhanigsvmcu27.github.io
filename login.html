@@ -32,6 +32,9 @@
   <h3 class="sec">মেম্বার লগইন</h3>
   <div class="card">
     <div class="err" id="loginErr" style="display:none;"></div>
+    <div id="pendingMsg" style="display:none;background:#fff8e1;border:1.5px solid #f9a825;color:#6d4c00;padding:12px 14px;border-radius:10px;font-size:15px;margin-bottom:14px;">✅ আপনার Google লগইন হয়েছে। এখন <strong>Admin-এর অনুমোদন</strong> বাকি আছে — অনুমোদন পেলে আবার লগইন করলেই ভিতরে ঢুকতে পারবেন।</div>
+    <button type="button" id="googleBtn" style="width:100%;background:#fff;color:#333;border:1.5px solid #ccc;padding:12px 22px;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;">🔵 Google দিয়ে লগইন করুন</button>
+    <p class="note" style="text-align:center;margin:12px 0;">— অথবা ইমেইল ও পাসওয়ার্ড দিয়ে —</p>
     <form class="f" id="loginForm">
       <div>
         <label for="email">ইমেইল</label>
@@ -43,7 +46,7 @@
       </div>
       <button type="submit" id="loginBtn">লগইন →</button>
     </form>
-    <p class="note" style="margin-top:14px;">শুধুমাত্র সন্ধানী টিমের সদস্যদের জন্য। অ্যাকাউন্ট পেতে অ্যাডমিনের সাথে যোগাযোগ করুন।</p>
+    <p class="note" style="margin-top:14px;">শুধুমাত্র সন্ধানী টিমের সদস্যদের জন্য। টিমের সদস্য হলে নিজের Gmail দিয়ে Google লগইন করুন — Admin অনুমোদন দিলেই ভিতরে ঢুকতে পারবেন।</p>
   </div>
 </section>
 
@@ -55,8 +58,18 @@
 <script src="js/config.js"></script>
 <script src="js/app.js"></script>
 <script>
-  // আগেই লগইন থাকলে সরাসরি ড্যাশবোর্ডে
+  document.getElementById('googleBtn').addEventListener('click', function () { Auth.signInWithGoogle(); });
+
+  // Google থেকে ফিরে এলে token প্রসেস করি; আগেই লগইন থাকলে সরাসরি ড্যাশবোর্ডে
   (async function () {
+    const oauth = await Auth.acceptOAuthRedirect();
+    if (oauth) {
+      if (oauth.ok) { location.href = 'member/dashboard.html'; return; }
+      if (oauth.pending) { document.getElementById('pendingMsg').style.display = 'block'; return; }
+      const el = document.getElementById('loginErr');
+      el.style.display = 'block'; el.textContent = oauth.error || 'লগইন করা যায়নি।';
+      return;
+    }
     const sess = await Auth.ensureFresh();
     if (sess) location.href = 'member/dashboard.html';
   })();
