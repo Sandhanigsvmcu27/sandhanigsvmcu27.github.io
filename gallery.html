@@ -35,10 +35,10 @@
 </header>
 
 <section>
-  <h3 class="sec">📸 আমাদের কার্যক্রম</h3>
-  <p style="margin-bottom:16px;">সন্ধানী গণস্বাস্থ্য সমাজ ভিত্তিক মেডিকেল কলেজ ইউনিটের বিভিন্ন কার্যক্রমের কিছু মুহূর্ত। ছবিতে চাপ দিলে বড় করে দেখা যাবে।</p>
+  <h3 class="sec">📰 সাম্প্রতিক কার্যক্রম</h3>
+  <p style="margin-bottom:16px;">সন্ধানী গণস্বাস্থ্য সমাজ ভিত্তিক মেডিকেল কলেজ ইউনিটের সাম্প্রতিক কার্যক্রমসমূহ — নতুন কাজ সবার উপরে। ছবিতে চাপ দিলে বড় করে দেখা যাবে।</p>
   <div class="g-filters" id="gFilters"></div>
-  <div class="gallery-grid" id="galleryGrid"></div>
+  <div class="feed-grid" id="galleryGrid"></div>
   <p class="note" id="galleryEmpty" style="display:none;">এই বিভাগে এখনো ছবি যোগ হয়নি — শীঘ্রই আসছে।</p>
 </section>
 
@@ -83,9 +83,17 @@
     document.getElementById('galleryEmpty').style.display = list.length ? 'none' : 'block';
     grid.innerHTML = '';
     list.forEach(function (p) {
+      var meta = [];
+      if (p.dateText) meta.push('📅 ' + esc2(p.dateText));
+      if (p.place) meta.push('📍 ' + esc2(p.place));
       var d = document.createElement('div');
-      d.className = 'g-item';
-      d.innerHTML = '<img src="' + esc2(p.src) + '" alt="' + esc2(p.cap) + '" loading="lazy"><div class="cap"><span class="cat">' + esc2(CATS[p.cat] || '') + '</span><br>' + esc2(p.cap) + '</div>';
+      d.className = 'a-card';
+      d.innerHTML = '<img src="' + esc2(p.src) + '" alt="' + esc2(p.cap) + '" loading="lazy"><div class="body">' +
+        '<span class="cat">' + esc2(CATS[p.cat] || '') + '</span>' +
+        '<div class="ttl">' + esc2(p.title || p.cap) + '</div>' +
+        (meta.length ? '<div class="meta">' + meta.join(' · ') + '</div>' : '') +
+        (p.desc ? '<div class="desc">' + esc2(p.desc) + '</div>' : '') +
+        '</div>';
       d.addEventListener('click', function () { openLb(p); });
       grid.appendChild(d);
     });

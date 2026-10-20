@@ -52,8 +52,28 @@
   <div class="err" id="pageErr" style="display:none;"></div>
   <div class="stock-grid" id="stockGrid"></div>
   <p class="note" id="stockUpdated"></p>
-  <p class="note">এখানে শুধু প্রতিটি গ্রুপের মোট ব্যাগের সংখ্যা দেখানো হয় — ডোনারদের কোনো ব্যক্তিগত তথ্য পাবলিকভাবে প্রকাশ করা হয় না।</p>
-  <p class="note">মনে রাখবেন: স্টকে সংখ্যা দেখা মানেই রক্ত নিশ্চিত নয় — রক্ত পেতে হলে <a href="request.html">অনুরোধ করুন</a>, টিম যাচাই করে জানিয়ে দেবে।</p>
+  <p class="note">এখানে শুধু স্টকে রক্ত আছে কি নেই তা দেখানো হয় — ব্যাগের সঠিক সংখ্যা প্রকাশ করা হয় না। ডোনারদের কোনো ব্যক্তিগত তথ্যও পাবলিকভাবে প্রকাশ করা হয় না।</p>
+  <p class="note">মনে রাখবেন: স্টকে "আছে" দেখা মানেই রক্ত নিশ্চিত নয় — রক্ত পেতে হলে <a href="request.html">অনুরোধ করুন</a>, টিম যাচাই করে জানিয়ে দেবে।</p>
+</section>
+
+<section id="vaccine">
+  <h3 class="sec">💉 টিকাদান কর্মসূচি</h3>
+  <div class="stock-grid" id="vaxGrid" style="grid-template-columns:repeat(auto-fill,minmax(210px,1fr));"></div>
+  <p class="note" id="vaxUpdated"></p>
+  <p class="note">টিকার সঠিক সংখ্যা প্রকাশ করা হয় না — শুধু পাওয়া যাচ্ছে কি না জানানো হয়। টিকা নিতে আগ্রহী হলে <a href="request.html">অনুরোধ ফর্মে</a> মেসেজ পাঠান — আমাদের টিম বিস্তারিত জানিয়ে দেবে।</p>
+</section>
+
+<section id="about">
+  <h3 class="sec">আমাদের সম্পর্কে</h3>
+  <div class="card">
+    <p><strong>সন্ধানী</strong> বাংলাদেশের মেডিকেল ও ডেন্টাল শিক্ষার্থীদের দ্বারা পরিচালিত একটি স্বেচ্ছাসেবী সংগঠন। ১৯৭৭ সালে ঢাকা মেডিকেল কলেজে এর যাত্রা শুরু হয়, এবং ২ নভেম্বর ১৯৭৮ সালে সন্ধানীর উদ্যোগে দেশে প্রথম স্বেচ্ছায় রক্তদান কর্মসূচি অনুষ্ঠিত হয়। মানবিক সেবায় অবদানের স্বীকৃতিস্বরূপ সন্ধানী লাভ করেছে <strong>স্বাধীনতা পুরস্কার (২০০৮)</strong>।</p>
+    <p style="margin-top:10px;"><strong>সন্ধানী গণস্বাস্থ্য সমাজ ভিত্তিক মেডিকেল কলেজ ইউনিট</strong> ২০০৬ সালে যাত্রা শুরু করে — এই কলেজের শিক্ষার্থীদের দ্বারা পরিচালিত ইউনিট। আমাদের কার্যক্রম: স্বেচ্ছায় রক্তদান, হেপাটাইটিস বি ও HPV টিকাদান, মরণোত্তর চক্ষুদান সচেতনতা, ফ্রি ঔষধ বিতরণ, শীতবস্ত্র বিতরণ এবং স্বাস্থ্য ক্যাম্প।</p>
+  </div>
+</section>
+
+<section id="upcoming" style="display:none;">
+  <h3 class="sec">📅 আসন্ন কার্যক্রম</h3>
+  <div id="upcomingList" style="display:grid;gap:12px;"></div>
 </section>
 
 <section id="activities">
@@ -81,9 +101,9 @@
 </section>
 
 <section id="gallery">
-  <h3 class="sec">📸 কার্যক্রমের ঝলক</h3>
-  <div class="gallery-grid" id="homeGallery"></div>
-  <p style="margin-top:14px;"><a class="btn blue" href="gallery.html">সব ছবি দেখুন →</a></p>
+  <h3 class="sec">📰 সাম্প্রতিক কার্যক্রম</h3>
+  <div class="feed-grid" id="homeGallery"></div>
+  <p style="margin-top:14px;"><a class="btn blue" href="gallery.html">সব কার্যক্রম দেখুন →</a></p>
 </section>
 
 <section id="donor-info">
@@ -160,9 +180,11 @@
       GROUPS.forEach(g => {
         const s = byGroup[g] || { bags: 0, updated_at: null, updated_by: '' };
         if (s.updated_at && (!latest || s.updated_at > latest)) { latest = s.updated_at; latestBy = s.updated_by || ''; }
+        // পাবলিকে শুধু স্ট্যাটাস — সঠিক সংখ্যা কখনোই নয় (Admin-এর সিদ্ধান্ত, ২০২৬-১০-২০)
+        const st = s.bags >= 3 ? { cls: 'ok', txt: '🟢 আছে' } : (s.bags >= 1 ? { cls: 'low', txt: '🟡 সীমিত আছে' } : { cls: 'out', txt: '⚪ বর্তমানে নেই' });
         const div = document.createElement('div');
-        div.className = 'stock-card' + (s.bags === 0 ? ' low' : '');
-        div.innerHTML = '<div class="grp">' + grpDisplay(g) + '</div><div class="bag">' + bnDigits(s.bags) + ' ব্যাগ</div>';
+        div.className = 'stock-card ' + st.cls;
+        div.innerHTML = '<div class="grp">' + grpDisplay(g) + '</div><div class="stat ' + st.cls + '">' + st.txt + '</div>';
         grid.appendChild(div);
       });
       if (latest) {
@@ -176,23 +198,76 @@
     }
   })();
 </script>
+<script>
+  // টিকাদান — পাবলিকে শুধু স্ট্যাটাস (আছে/সীমিত/নেই), ডোজের সংখ্যা নয়
+  (async function loadVax() {
+    const grid = document.getElementById('vaxGrid');
+    if (!grid) return;
+    try {
+      const rows = await SB.get('/vaccines?select=id,name,doses,updated_at,updated_by&order=id.asc', { auth: false });
+      let latest = null;
+      (rows || []).forEach(v => {
+        if (v.updated_at && (!latest || v.updated_at > latest)) latest = v.updated_at;
+        const st = v.doses >= 10 ? { cls: 'ok', txt: '🟢 পাওয়া যাচ্ছে' } : (v.doses >= 1 ? { cls: 'low', txt: '🟡 সীমিত আছে' } : { cls: 'out', txt: '⚪ বর্তমানে নেই' });
+        const div = document.createElement('div');
+        div.className = 'stock-card ' + st.cls;
+        div.innerHTML = '<div class="vn">' + esc(v.name) + '</div><div class="stat ' + st.cls + '">' + st.txt + '</div>';
+        grid.appendChild(div);
+      });
+      if (latest) document.getElementById('vaxUpdated').innerHTML = 'সর্বশেষ আপডেট: <strong>' + fmtDateBn(latest) + '</strong>';
+    } catch (e) {
+      grid.innerHTML = '<p class="note">টিকার তথ্য লোড করা যায়নি।</p>';
+    }
+  })();
+</script>
 <script src="js/photos.js"></script>
 <script>
-  // হোমপেজে গ্যালারির প্রথম ছবিগুলো; ছবি না থাকলে সেকশনটাই লুকিয়ে থাকে
+  function escH(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+  // হোমপেজে সাম্প্রতিক কার্যক্রমের প্রথম ৩টি; ছবি না থাকলে সেকশনটাই লুকিয়ে থাকে
   (function () {
-    var photos = (window.GALLERY_PHOTOS || []).slice(0, 6);
+    var photos = (window.GALLERY_PHOTOS || []).slice(0, 3);
     var sec = document.getElementById('gallery');
     if (!photos.length) { sec.style.display = 'none'; return; }
     var CATS = { blood: '🩸 রক্তদান', winter: '🧣 শীতবস্ত্র বিতরণ', iftar: '🌙 ইফতার মাহফিল', vaccine: '💉 টিকাদান', other: '🤝 অন্যান্য' };
     var grid = document.getElementById('homeGallery');
     photos.forEach(function (p) {
+      var meta = [];
+      if (p.dateText) meta.push('📅 ' + escH(p.dateText));
+      if (p.place) meta.push('📍 ' + escH(p.place));
       var a = document.createElement('a');
       a.href = 'gallery.html';
-      a.className = 'g-item';
+      a.className = 'a-card';
       a.style.textDecoration = 'none';
-      a.innerHTML = '<img src="' + p.src + '" alt="" loading="lazy"><div class="cap"><span class="cat">' + (CATS[p.cat] || '') + '</span><br>' + p.cap + '</div>';
+      a.style.color = 'inherit';
+      a.innerHTML = '<img src="' + escH(p.src) + '" alt="" loading="lazy"><div class="body">' +
+        '<span class="cat">' + (CATS[p.cat] || '') + '</span>' +
+        '<div class="ttl">' + escH(p.title || p.cap) + '</div>' +
+        (meta.length ? '<div class="meta">' + meta.join(' · ') + '</div>' : '') +
+        (p.desc ? '<div class="desc">' + escH(p.desc) + '</div>' : '') +
+        '</div>';
       grid.appendChild(a);
     });
+  })();
+
+  // আসন্ন কার্যক্রম — তালিকা খালি থাকলে সেকশন লুকানোই থাকে
+  (function () {
+    var list = window.UPCOMING_ACTIVITIES || [];
+    if (!list.length) return;
+    var sec = document.getElementById('upcoming');
+    var wrap = document.getElementById('upcomingList');
+    list.forEach(function (u) {
+      var meta = [];
+      if (u.dateText) meta.push('📅 ' + escH(u.dateText));
+      if (u.place) meta.push('📍 ' + escH(u.place));
+      var d = document.createElement('div');
+      d.className = 'card';
+      d.innerHTML = '<div style="font-size:18px;font-weight:800;color:var(--blue);">' + escH(u.title) + '</div>' +
+        (meta.length ? '<div style="font-size:14px;color:#555;margin-top:4px;">' + meta.join(' · ') + '</div>' : '') +
+        (u.note ? '<p style="margin-top:6px;">' + escH(u.note) + '</p>' : '');
+      wrap.appendChild(d);
+    });
+    sec.style.display = 'block';
   })();
 </script>
 <script src="js/nav.js"></script>
