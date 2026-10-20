@@ -49,6 +49,13 @@
 </section>
 
 <section>
+  <h3 class="sec">নিজেই যাচাই করুন — আপনি কি রক্ত দিতে পারবেন?</h3>
+  <div class="card">
+    <div id="quizBody"></div>
+  </div>
+</section>
+
+<section>
   <h3 class="sec">কে সাময়িকভাবে রক্ত দিতে পারবেন না?</h3>
   <div class="card">
     <ul class="rules">
@@ -67,6 +74,16 @@
   <h3 class="sec">১২০ দিনের নিয়ম</h3>
   <div class="card">
     <p>একবার রক্ত দেওয়ার পর শরীরের রক্ত পুরোপুরি আগের অবস্থায় ফিরতে সময় লাগে। তাই পরের বার রক্ত দেওয়ার আগে কমপক্ষে <strong>১২০ দিন</strong> অপেক্ষা করতে হয়। আমাদের সিস্টেমে প্রতিটি ডোনারের শেষ রক্তদানের তারিখ হিসাব রাখা হয় — এই সময় পার না হলে ডোনারকে আমরা বিরতিতে রাখি, যাতে কারো স্বাস্থ্যের ঝুঁকি না হয়।</p>
+  </div>
+</section>
+
+<section>
+  <h3 class="sec">এক ক্লিকে দেখুন — কোন গ্রুপ কাকে দিতে পারবে</h3>
+  <div class="card">
+    <p>আপনার ব্লাড গ্রুপ বেছে নিন:</p>
+    <div class="grp-btns" id="compatBtns"></div>
+    <div id="compatOut"></div>
+    <p class="note">এটি লোহিত রক্তকণিকা (packed red cell) দেওয়া-নেওয়ার সাধারণ নিয়ম। প্রকৃত ক্ষেত্রে হাসপাতাল ক্রস-ম্যাচিং করে চূড়ান্ত সিদ্ধান্ত নেয়। নিচে পুরো ছকটিও দেওয়া আছে।</p>
   </div>
 </section>
 
@@ -128,6 +145,71 @@
   রক্ত দিন, জীবন বাঁচান 🩸
 </footer>
 
+<script>
+  // ---- যোগ্যতা যাচাই কুইজ (কিছুই সেভ হয় না) ----
+  (function () {
+    var QS = [
+      { q: 'আপনার বয়স কি ১৮ থেকে ৬০ বছরের মধ্যে?', ok: true, why: 'বয়স ১৮–৬০ এর বাইরে হলে সাধারণত রক্ত দেওয়া যায় না।' },
+      { q: 'আপনার ওজন কি কমপক্ষে ৫০ কেজি?', ok: true, why: 'ওজন ৫০ কেজির কম হলে রক্ত দেওয়া যায় না।' },
+      { q: 'শেষ রক্তদানের পর কি ১২০ দিন পার হয়েছে? (প্রথমবার হলে "হ্যাঁ" দিন)', ok: true, why: 'শেষ ডোনেশনের ১২০ দিন পার না হলে এখনই দেওয়া যাবে না — তারিখটা পার হলেই পারবেন।' },
+      { q: 'বর্তমানে কি জ্বর/অসুস্থতা আছে, অথবা অ্যান্টিবায়োটিক চলছে?', ok: false, why: 'পুরোপুরি সুস্থ হওয়ার পর (এবং ওষুধের কোর্স শেষ হলে) রক্ত দিন।' },
+      { q: 'গত কয়েক মাসে কি ট্যাটু/পিয়ার্সিং বা বড় অপারেশন হয়েছে?', ok: false, why: 'এক্ষেত্রে কিছুদিন অপেক্ষা করতে হয় — আমাদের টিমকে জানালে সঠিক সময় বলে দেবে।' }
+    ];
+    var body = document.getElementById('quizBody');
+    var idx = 0, fails = [];
+    function render() {
+      if (idx >= QS.length) {
+        if (!fails.length) {
+          body.innerHTML = '<p style="font-size:17px;"><strong>✅ আপনি সম্ভবত রক্ত দিতে পারবেন।</strong></p><p class="note" style="margin-top:8px;">এটি প্রাথমিক ধারণা মাত্র — চূড়ান্ত সিদ্ধান্ত হয় রক্তদানের আগের স্বাস্থ্য যাচাই (স্ক্রিনিং) অনুযায়ী। ডোনার হতে চাইলে <a href="index.html#contact">আমাদের অফিসে</a> যোগাযোগ করুন।</p><p style="margin-top:12px;"><button class="btn small blue" id="quizRestart">🔄 আবার যাচাই করুন</button></p>';
+        } else {
+          body.innerHTML = '<p style="font-size:17px;"><strong>⏳ এখনই হয়তো রক্ত দেওয়া যাবে না:</strong></p><ul class="rules" style="margin-top:8px;">' + fails.map(function (f) { return '<li>' + f + '</li>'; }).join('') + '</ul><p class="note">সন্দেহ থাকলে আমাদের টিম বা চিকিৎসককে জানান।</p><p style="margin-top:12px;"><button class="btn small blue" id="quizRestart">🔄 আবার যাচাই করুন</button></p>';
+        }
+        document.getElementById('quizRestart').addEventListener('click', function () { idx = 0; fails = []; render(); });
+        return;
+      }
+      var item = QS[idx];
+      body.innerHTML = '<p class="note">প্রশ্ন ' + (idx + 1) + ' / ' + QS.length + '</p><p class="quiz-q">' + item.q + '</p><div class="quiz-yn"><button id="qYes">হ্যাঁ</button><button id="qNo">না</button></div>';
+      document.getElementById('qYes').addEventListener('click', function () { answer(true); });
+      document.getElementById('qNo').addEventListener('click', function () { answer(false); });
+    }
+    function answer(v) {
+      if (v !== QS[idx].ok) fails.push(QS[idx].why);
+      idx++;
+      render();
+    }
+    render();
+  })();
+
+  // ---- ইন্টার‌্যাক্টিভ compatibility ----
+  (function () {
+    var GIVE = {
+      'A+': ['A+', 'AB+'], 'A−': ['A+', 'A−', 'AB+', 'AB−'],
+      'B+': ['B+', 'AB+'], 'B−': ['B+', 'B−', 'AB+', 'AB−'],
+      'O+': ['O+', 'A+', 'B+', 'AB+'], 'O−': ['O+', 'O−', 'A+', 'A−', 'B+', 'B−', 'AB+', 'AB−'],
+      'AB+': ['AB+'], 'AB−': ['AB+', 'AB−']
+    };
+    var RECEIVE = {
+      'A+': ['A+', 'A−', 'O+', 'O−'], 'A−': ['A−', 'O−'],
+      'B+': ['B+', 'B−', 'O+', 'O−'], 'B−': ['B−', 'O−'],
+      'O+': ['O+', 'O−'], 'O−': ['O−'],
+      'AB+': ['A+', 'A−', 'B+', 'B−', 'O+', 'O−', 'AB+', 'AB−'], 'AB−': ['AB−', 'A−', 'B−', 'O−']
+    };
+    var order = ['A+', 'A−', 'B+', 'B−', 'O+', 'O−', 'AB+', 'AB−'];
+    var btns = document.getElementById('compatBtns');
+    var out = document.getElementById('compatOut');
+    order.forEach(function (g) {
+      var b = document.createElement('button');
+      b.textContent = g;
+      b.addEventListener('click', function () {
+        btns.querySelectorAll('button').forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active');
+        out.innerHTML = '<p style="margin-top:6px;">🩸 <strong>' + g + '</strong> গ্রুপের রক্ত <strong>দিতে পারবেন:</strong> ' + GIVE[g].join(', ') + '</p>' +
+          '<p style="margin-top:6px;">💉 <strong>' + g + '</strong> গ্রুপের রোগী <strong>নিতে পারবেন:</strong> ' + RECEIVE[g].join(', ') + ' গ্রুপের রক্ত</p>';
+      });
+      btns.appendChild(b);
+    });
+  })();
+</script>
 <script src="js/nav.js"></script>
 </body>
 </html>

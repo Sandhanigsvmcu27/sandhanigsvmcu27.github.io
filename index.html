@@ -66,6 +66,12 @@
   </div>
 </section>
 
+<section id="gallery">
+  <h3 class="sec">📸 কার্যক্রমের ঝলক</h3>
+  <div class="gallery-grid" id="homeGallery"></div>
+  <p style="margin-top:14px;"><a class="btn blue" href="gallery.html">সব ছবি দেখুন →</a></p>
+</section>
+
 <section id="donor-info">
   <h3 class="sec">ডোনার হতে চান?</h3>
   <div class="card">
@@ -89,6 +95,34 @@
       <li>স্টকে রক্ত না থাকলে আমাদের টিম ডোনার ম্যানেজ করে আপনাকে জানিয়ে দেবে।</li>
     </ul>
   </div>
+</section>
+
+<section id="faq" class="faq">
+  <h3 class="sec">সাধারণ জিজ্ঞাসা</h3>
+  <details>
+    <summary>কীভাবে রক্তের অনুরোধ করব?</summary>
+    <p>এই সাইটের <a href="request.html">রক্তের অনুরোধ</a> পেজে ফর্মটি পূরণ করে পাঠিয়ে দিন। পাঠালেই একটি ট্র্যাকিং নম্বর পাবেন — সেটি দিয়ে <a href="track.html">অনুরোধ ট্র্যাক</a> পেজে আমাদের টিমের উত্তর দেখতে ও আবার মেসেজ পাঠাতে পারবেন। কারো ফোন নম্বর খোঁজার দরকার নেই।</p>
+  </details>
+  <details>
+    <summary>বিনিময় (এক্সচেঞ্জ) নিয়মটা কী?</summary>
+    <p>আমাদের স্টক থেকে প্রয়োজনীয় গ্রুপের <strong>এক ব্যাগ</strong> রক্ত নিলে, তার বদলে <strong>অন্য যেকোনো গ্রুপের এক ব্যাগ</strong> রক্ত দিতে হয়। এভাবেই স্টক সবসময় পরের রোগীর জন্য প্রস্তুত থাকে।</p>
+  </details>
+  <details>
+    <summary>খরচ কত লাগবে?</summary>
+    <p>শুধুমাত্র <strong>ব্লাড ব্যাগের মূল্য</strong> প্রযোজ্য — এর বাইরে কোনো টাকা নেওয়া হয় না। মনে রাখবেন, রক্ত কেনাবেচা সম্পূর্ণ নিষিদ্ধ ও শাস্তিযোগ্য অপরাধ।</p>
+  </details>
+  <details>
+    <summary>স্টকে আমার প্রয়োজনীয় গ্রুপ না থাকলে কী হবে?</summary>
+    <p>চিন্তা নেই — আমাদের টিম ডোনার খুঁজে ম্যানেজ করে আপনার অনুরোধের উত্তরেই জানিয়ে দেবে। ট্র্যাকিং নম্বর দিয়ে অবস্থা দেখতে থাকুন।</p>
+  </details>
+  <details>
+    <summary>আমি ডোনার হতে চাই — আমার তথ্য কি সবাই দেখতে পাবে?</summary>
+    <p>না। ডোনারদের নাম ও ফোন নম্বর <strong>কখনো পাবলিক করা হয় না</strong> — শুধুমাত্র সন্ধানী টিমের সদস্যরাই দেখতে পারেন। এই সাইটে শুধু প্রতিটি গ্রুপে মোট কয় ব্যাগ রক্ত আছে, সেটুকুই দেখানো হয়।</p>
+  </details>
+  <details>
+    <summary>একবার রক্ত দিলে আবার কতদিন পর দেওয়া যায়?</summary>
+    <p>কমপক্ষে <strong>১২০ দিন (৪ মাস)</strong> পর। বিস্তারিত জানতে <a href="shikkha.html">রক্তদান সম্পর্কে</a> পেজটি দেখুন।</p>
+  </details>
 </section>
 
 <footer class="site" id="contact">
@@ -126,6 +160,25 @@
       grid.innerHTML = '';
       showPageError('স্টকের তথ্য লোড করা যায়নি, আবার চেষ্টা করুন।');
     }
+  })();
+</script>
+<script src="js/photos.js"></script>
+<script>
+  // হোমপেজে গ্যালারির প্রথম ছবিগুলো; ছবি না থাকলে সেকশনটাই লুকিয়ে থাকে
+  (function () {
+    var photos = (window.GALLERY_PHOTOS || []).slice(0, 6);
+    var sec = document.getElementById('gallery');
+    if (!photos.length) { sec.style.display = 'none'; return; }
+    var CATS = { blood: '🩸 রক্তদান', winter: '🧣 শীতবস্ত্র বিতরণ', iftar: '🌙 ইফতার মাহফিল', vaccine: '💉 টিকাদান', other: '🤝 অন্যান্য' };
+    var grid = document.getElementById('homeGallery');
+    photos.forEach(function (p) {
+      var a = document.createElement('a');
+      a.href = 'gallery.html';
+      a.className = 'g-item';
+      a.style.textDecoration = 'none';
+      a.innerHTML = '<img src="' + p.src + '" alt="" loading="lazy"><div class="cap"><span class="cat">' + (CATS[p.cat] || '') + '</span><br>' + p.cap + '</div>';
+      grid.appendChild(a);
+    });
   })();
 </script>
 <script src="js/nav.js"></script>
