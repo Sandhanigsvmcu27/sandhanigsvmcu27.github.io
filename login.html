@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>মেম্বার লগইন — সন্ধানী GSVMC ইউনিট</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site">
+  <img class="logo" src="../assets/sandhani-logo.jpg" alt="সন্ধানী লোগো">
+  <div class="org">
+    <h1>সন্ধানী</h1>
+    <p>গণস্বাস্থ্য সমাজভিত্তিক মেডিকেল কলেজ ইউনিট</p>
+  </div>
+  <nav class="main">
+    <a href="index.html">হোম</a>
+    <a href="shikkha.html">রক্তদান সম্পর্কে</a>
+  </nav>
+</header>
+
+<section style="max-width:520px;">
+  <h3 class="sec">মেম্বার লগইন</h3>
+  <div class="card">
+    <div class="err" id="loginErr" style="display:none;"></div>
+    <form class="f" id="loginForm">
+      <div>
+        <label for="email">ইমেইল</label>
+        <input type="email" id="email" required placeholder="name@example.com" autocomplete="username">
+      </div>
+      <div>
+        <label for="password">পাসওয়ার্ড</label>
+        <input type="password" id="password" required placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button type="submit" id="loginBtn">লগইন →</button>
+    </form>
+    <p class="note" style="margin-top:14px;">শুধুমাত্র সন্ধানী টিমের সদস্যদের জন্য। অ্যাকাউন্ট পেতে অ্যাডমিনের সাথে যোগাযোগ করুন।</p>
+  </div>
+</section>
+
+<footer class="site">
+  <strong>সন্ধানী — গণস্বাস্থ্য সমাজভিত্তিক মেডিকেল কলেজ ইউনিট</strong><br>
+  রক্ত দিন, জীবন বাঁচান 🩸
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+<script>
+  // আগেই লগইন থাকলে সরাসরি ড্যাশবোর্ডে
+  (async function () {
+    const sess = await Auth.ensureFresh();
+    if (sess) location.href = 'member/dashboard.html';
+  })();
+
+  document.getElementById('loginForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const el = document.getElementById('loginErr');
+    el.style.display = 'none';
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true;
+    const res = await Auth.login(document.getElementById('email').value, document.getElementById('password').value);
+    if (res.ok) location.href = 'member/dashboard.html';
+    else {
+      el.style.display = 'block'; el.textContent = res.error;
+      btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
