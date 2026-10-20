@@ -12,7 +12,7 @@
   <div class="member-main">
     <h2 class="page">🧊 ব্লাড স্টক ম্যানেজমেন্ট</h2>
     <div class="err" id="pageErr" style="display:none;"></div>
-    <div class="okbox" id="savedMsg" style="display:none;">✅ স্টক আপডেট হয়েছে — পাবলিক স্টক বোর্ডেও নতুন সংখ্যা দেখাবে।</div>
+    <div class="okbox" id="savedMsg" style="display:none;">✅ আপডেট হয়েছে — পাবলিক বোর্ডে নতুন স্ট্যাটাস (আছে / সীমিত / নেই) দেখাবে।</div>
 
     <div class="card">
       <form class="f" id="stockForm">
@@ -22,7 +22,19 @@
         </table>
         <button type="submit" style="margin-top:14px;">স্টক সেভ করুন →</button>
       </form>
-      <p class="note">প্রতিটি গ্রুপের লাইভ সংখ্যা লিখে সেভ করলেই পাবলিক হোমপেজের স্টক বোর্ড আপডেট হয়ে যাবে। কে কখন আপডেট করল তার রেকর্ড থাকবে।</p>
+      <p class="note">সংখ্যা শুধু মেম্বারদের জন্য — পাবলিক বোর্ডে শুধু স্ট্যাটাস দেখায়: <strong>৩+ ব্যাগ = 🟢 আছে, ১–২ = 🟡 সীমিত, ০ = ⚪ নেই</strong>। কে কখন আপডেট করল তার রেকর্ড থাকবে।</p>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <h3 style="margin-bottom:10px;">💉 টিকার স্টক</h3>
+      <form class="f" id="vaxForm">
+        <table class="t">
+          <thead><tr><th>টিকা</th><th>ডোজ সংখ্যা</th><th>সর্বশেষ আপডেট</th></tr></thead>
+          <tbody id="vaxBody"></tbody>
+        </table>
+        <button type="submit" style="margin-top:14px;">টিকার স্টক সেভ করুন →</button>
+      </form>
+      <p class="note">টিকার বেলায়ও পাবলিকে শুধু স্ট্যাটাস: <strong>১০+ ডোজ = 🟢 পাওয়া যাচ্ছে, ১–৯ = 🟡 সীমিত, ০ = ⚪ নেই</strong>।</p>
     </div>
   </div>
 </div>
@@ -82,6 +94,47 @@
     });
 
     loadStock();
+
+    // ——— টিকার স্টক ———
+    const vtb = document.getElementById('vaxBody');
+    let vloaded = {};
+    async function loadVax() {
+      try {
+        const rows = await SB.get('/vaccines?select=id,name,doses,updated_at,updated_by&order=id.asc') || [];
+        vloaded = {};
+        rows.forEach(r => { vloaded[r.id] = r; });
+      } catch (e) { vloaded = {}; }
+      vtb.innerHTML = '';
+      Object.values(vloaded).forEach(v => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td><strong>' + esc(v.name) + '</strong></td>' +
+          '<td><input type="number" min="0" max="9999" value="' + (v.doses || 0) + '" id="vx_' + v.id + '" style="padding:8px;border:1px solid #ccc;border-radius:6px;width:110px;"></td>' +
+          '<td style="font-size:13px;color:#555;">' + (v.updated_at ? fmtDateBn(v.updated_at) + (v.updated_by ? ' — ' + esc(v.updated_by) : '') : '—') + '</td>';
+        vtb.appendChild(tr);
+      });
+    }
+    document.getElementById('vaxForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      try {
+        for (const id of Object.keys(vloaded)) {
+          const el = document.getElementById('vx_' + id);
+          if (!el) continue;
+          let v = parseInt(el.value, 10);
+          if (isNaN(v) || v < 0) v = 0;
+          if (vloaded[id].doses === v) continue;
+          await SB.update('/vaccines?id=eq.' + encodeURIComponent(id), {
+            doses: v, updated_by: sess.name, updated_at: new Date().toISOString()
+          });
+        }
+        await loadVax();
+        const m = document.getElementById('savedMsg');
+        m.style.display = 'block';
+        m.scrollIntoView({ behavior: 'smooth' });
+      } catch (err) {
+        showPageError('টিকার স্টক সেভ করা যায়নি, আবার চেষ্টা করুন।');
+      }
+    });
+    loadVax();
   })();
 </script>
 </body>
