@@ -467,6 +467,7 @@ function sidebarHTML(activePage, sess) {
     ['inbox.html', '📥 ইনবক্স'],
     ['stock.html', '🧊 স্টক'],
     ['exchange.html', '🔄 এক্সচেঞ্জ'],
+    ['activity.html', '🖼️ কার্যক্রম যোগ'],
   ];
   if (sess.role === 'admin') links.push(['users.html', '👥 ইউজার']);
   let html = '<div class="sidebar"><div class="who"><strong>' + esc(sess.name) + '</strong>' + roleBn + '</div>';
