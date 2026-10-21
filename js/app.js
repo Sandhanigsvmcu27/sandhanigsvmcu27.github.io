@@ -223,25 +223,60 @@ const Auth = {
     location.href = SB_URL + '/auth/v1/authorize?provider=google&redirect_to=' + encodeURIComponent(redirectTo);
   },
 
-  /* Google থেকে ফিরে এলে hash-এর token দিয়ে session বসায়।
-     hash না থাকলে null; profile না থাকলে/সক্রিয় না হলে { ok:false, pending:true } */
+  /* Google theke fire ele session bosay — hash token (implicit) othoba ?code= (PKCE) dutoi dhore.
+     kichui na thakle null; error thakle { ok:false, error }; profile na thakle { ok:false, pending:true } */
   async acceptOAuthRedirect() {
-    if (!location.hash || location.hash.indexOf('access_token=') === -1) return null;
-    const p = new URLSearchParams(location.hash.slice(1));
-    const access = p.get('access_token');
-    const refresh = p.get('refresh_token');
-    history.replaceState(null, '', location.pathname + location.search);
-    if (!access) return { ok: false, error: 'Google লগইন সম্পন্ন করা যায়নি, আবার চেষ্টা করুন।' };
-    let user = null;
-    try {
-      const r = await fetch(SB_URL + '/auth/v1/user', { headers: { apikey: SB_ANON, Authorization: 'Bearer ' + access } });
-      if (r.ok) user = await r.json();
-    } catch (e) { /* ignore */ }
-    if (!user) return { ok: false, error: 'Google লগইন সম্পন্ন করা যায়নি, আবার চেষ্টা করুন।' };
+    const q = new URLSearchParams(location.search);
+    const h = location.hash ? new URLSearchParams(location.hash.slice(1)) : new URLSearchParams();
+    const errDesc = h.get('error_description') || q.get('error_description') || h.get('error') || q.get('error');
+    if (errDesc) {
+      history.replaceState(null, '', location.pathname);
+      return { ok: false, error: 'Google login hoyni: ' + decodeURIComponent(String(errDesc).replace(/\+/g, ' ')) };
+    }
+    if (h.get('access_token')) {
+      const access = h.get('access_token');
+      const refresh = h.get('refresh_token');
+      const exp = parseInt(h.get('expires_in') || '3600', 10);
+      history.replaceState(null, '', location.pathname);
+      return this._finishOAuth(access, refresh, exp);
+    }
+    if (q.get('code')) {
+      const code = q.get('code');
+      history.replaceState(null, '', location.pathname);
+      try {
+        const r = await fetch(SB_URL + '/auth/v1/token?grant_type=pkce', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { apikey: SB_ANON, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ auth_code: code })
+        });
+        const data = await r.json().catch(() => null);
+        if (r.ok && data && data.access_token) {
+          return this._finishOAuth(data.access_token, data.refresh_token, data.expires_in || 3600, data.user);
+        }
+        const msg = (data && (data.error_description || data.msg || data.error)) || 'code exchange failed';
+        return { ok: false, error: 'Google login hoyni: ' + msg };
+      } catch (e) {
+        return { ok: false, error: 'Google login sompurno kora jayni, abar chesta korun.' };
+      }
+    }
+    return null;
+  },
+
+  /* token paoyar porer ongsho: user + profile jachai kore session save kore */
+  async _finishOAuth(access, refresh, expiresIn, knownUser) {
+    let user = knownUser || null;
+    if (!user) {
+      try {
+        const r = await fetch(SB_URL + '/auth/v1/user', { headers: { apikey: SB_ANON, Authorization: 'Bearer ' + access } });
+        if (r.ok) user = await r.json();
+      } catch (e) { /* ignore */ }
+    }
+    if (!user) return { ok: false, error: 'Google login sompurno kora jayni, abar chesta korun.' };
     const sess = {
       access_token: access,
       refresh_token: refresh,
-      expires_at: Date.now() + (parseInt(p.get('expires_in') || '3600', 10)) * 1000,
+      expires_at: Date.now() + (parseInt(expiresIn || '3600', 10)) * 1000,
       user: user,
       profile: null
     };
