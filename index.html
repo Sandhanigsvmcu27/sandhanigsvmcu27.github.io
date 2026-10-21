@@ -13,9 +13,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
 <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="pub">
 
 <header class="site">
   <img class="logo" src="../assets/sandhani-logo.jpg" alt="সন্ধানী লোগো">
@@ -38,16 +41,25 @@
 </header>
 
 <div class="hero">
-  <h2>রক্তের প্রয়োজনে, আমরা আছি পাশে।</h2>
-  <p class="lead">রক্তের প্রয়োজন হলে অনুরোধ জানান। আমাদের টিম আপনার দেওয়া তথ্য যাচাই করে রক্তের ব্যবস্থা করতে সহায়তা করবে।</p>
-  <div class="hero-cta">
-    <a class="btn-hero primary" href="request.html">🩸 রক্তের অনুরোধ করুন</a>
-    <a class="btn-hero secondary" href="track.html">অনুরোধের অবস্থা দেখুন</a>
+  <div class="hero-grid">
+    <div class="hero-text">
+      <h2>রক্তের প্রয়োজনে, আমরা আছি পাশে।</h2>
+      <p class="lead">রক্তের প্রয়োজন হলে অনুরোধ জানান। আমাদের টিম আপনার দেওয়া তথ্য যাচাই করে রক্তের ব্যবস্থা করতে সহায়তা করবে।</p>
+      <div class="hero-cta">
+        <a class="btn-hero primary" href="request.html">🩸 রক্তের অনুরোধ করুন</a>
+        <a class="btn-hero secondary" href="track.html">অনুরোধের অবস্থা দেখুন</a>
+      </div>
+      <p class="hero-stock-link"><a href="#stock">আগে স্টক দেখুন ↓</a></p>
+      <p class="hero-slogan">“রক্ত দিলে হয় না ক্ষতি, জাগ্রত হয় মানবিক অনুভূতি”</p>
+    </div>
+    <div class="hero-photo">
+      <img src="assets/gallery/zia-udyan-1.jpg" alt="জিয়া উদ্যানে রক্তদান কর্মসূচিতে রক্ত দিচ্ছেন একজন ডোনার — ২৬ মার্চ ২০২৬">
+    </div>
   </div>
-  <p class="hero-slogan">“রক্ত দিলে হয় না ক্ষতি, জাগ্রত হয় মানবিক অনুভূতি”</p>
 </div>
 
 <section id="stock">
+  <span class="kick">তথ্য</span>
   <h3 class="sec">লাইভ ব্লাড স্টক</h3>
   <div class="err" id="pageErr" style="display:none;"></div>
   <div class="stock-grid" id="stockGrid"></div>
@@ -57,6 +69,7 @@
 </section>
 
 <section id="vaccine">
+  <span class="kick">টিকাদান</span>
   <h3 class="sec">💉 টিকাদান কর্মসূচি</h3>
   <div class="stock-grid" id="vaxGrid" style="grid-template-columns:repeat(auto-fill,minmax(210px,1fr));"></div>
   <p class="note" id="vaxUpdated"></p>
@@ -64,6 +77,7 @@
 </section>
 
 <section id="about">
+  <span class="kick">পরিচিতি</span>
   <h3 class="sec">আমাদের সম্পর্কে</h3>
   <div class="card">
     <p><strong>সন্ধানী</strong> বাংলাদেশের মেডিকেল ও ডেন্টাল শিক্ষার্থীদের দ্বারা পরিচালিত একটি স্বেচ্ছাসেবী সংগঠন। ১৯৭৭ সালে ঢাকা মেডিকেল কলেজে এর যাত্রা শুরু হয়, এবং ২ নভেম্বর ১৯৭৮ সালে সন্ধানীর উদ্যোগে দেশে প্রথম স্বেচ্ছায় রক্তদান কর্মসূচি অনুষ্ঠিত হয়। মানবিক সেবায় অবদানের স্বীকৃতিস্বরূপ সন্ধানী লাভ করেছে <strong>স্বাধীনতা পুরস্কার (২০০৮)</strong>।</p>
@@ -72,11 +86,13 @@
 </section>
 
 <section id="upcoming" style="display:none;">
+  <span class="kick">আসন্ন</span>
   <h3 class="sec">📅 আসন্ন কার্যক্রম</h3>
   <div id="upcomingList" style="display:grid;gap:12px;"></div>
 </section>
 
 <section id="activities">
+  <span class="kick">আমাদের কাজ</span>
   <h3 class="sec">আমাদের কার্যক্রম</h3>
   <div style="display:grid;gap:14px;">
     <div class="card highlight">
@@ -101,12 +117,15 @@
 </section>
 
 <section id="gallery">
+  <span class="kick">কার্যক্রম</span>
   <h3 class="sec">📰 সাম্প্রতিক কার্যক্রম</h3>
+  <p class="fresh-line" id="freshLine"></p>
   <div class="feed-grid" id="homeGallery"></div>
   <p style="margin-top:14px;"><a class="btn blue" href="gallery.html">সব কার্যক্রম দেখুন →</a></p>
 </section>
 
 <section id="donor-info">
+  <span class="kick">ডোনার হোন</span>
   <h3 class="sec">ডোনার হতে চান?</h3>
   <div class="card">
     <ul class="rules">
@@ -120,6 +139,7 @@
 </section>
 
 <section id="rules">
+  <span class="kick">নিয়ম</span>
   <h3 class="sec">আমাদের নিয়মাবলী</h3>
   <div class="card">
     <ul class="rules">
@@ -132,6 +152,7 @@
 </section>
 
 <section id="faq" class="faq">
+  <span class="kick">জিজ্ঞাসা</span>
   <h3 class="sec">সাধারণ জিজ্ঞাসা</h3>
   <details>
     <summary>কীভাবে রক্তের অনুরোধ করব?</summary>
@@ -160,10 +181,29 @@
 </section>
 
 <footer class="site" id="contact">
-  <strong>সন্ধানী — গণস্বাস্থ্য সমাজ ভিত্তিক মেডিকেল কলেজ ইউনিট</strong><br>
-  হাসপাতাল ভবন, ২য় তলা, রুম নং-২১৫, মির্জানগর, সাভার, ঢাকা-১৩৪৪<br>
-  রক্ত দিন, জীবন বাঁচান 🩸
+  <div class="fwrap">
+    <div class="fbrand">
+      <strong>সন্ধানী — গণস্বাস্থ্য সমাজ ভিত্তিক মেডিকেল কলেজ ইউনিট</strong>
+      <p>রক্ত দিন, জীবন বাঁচান 🩸</p>
+    </div>
+    <nav class="flinks">
+      <h4>গুরুত্বপূর্ণ লিংক</h4>
+      <a href="index.html">হোম</a>
+      <a href="request.html">রক্তের অনুরোধ</a>
+      <a href="track.html">অনুরোধ ট্র্যাক করুন</a>
+      <a href="gallery.html">কার্যক্রম</a>
+      <a href="shikkha.html">রক্তদানের নিয়মাবলী</a>
+    </nav>
+    <div class="fcontact">
+      <h4>যোগাযোগ</h4>
+      <p>হাসপাতাল ভবন, ২য় তলা, রুম নং-২১৫,<br>মির্জানগর, সাভার, ঢাকা-১৩৪৪</p>
+      <p><a href="https://www.facebook.com/sandhani.gsvmcu" target="_blank" rel="noopener">📘 আমাদের Facebook পেজ</a></p>
+    </div>
+  </div>
+  <p class="fcopy">© ২০২৬ সন্ধানী গণস্বাস্থ্য সমাজ ভিত্তিক মেডিকেল কলেজ ইউনিট</p>
 </footer>
+
+<a class="sticky-cta" href="request.html">🩸 জরুরি রক্ত লাগবে — অনুরোধ করুন</a>
 
 <script src="js/config.js"></script>
 <script src="js/app.js"></script>
@@ -226,6 +266,12 @@
 
   // হোমপেজে সাম্প্রতিক কার্যক্রমের প্রথম ৩টি; ছবি না থাকলে সেকশনটাই লুকিয়ে থাকে
   (function () {
+    // সতেজতা লাইন — ফিডের প্রথম তারিখওয়ালা এন্ট্রি থেকে auto
+    var fl = document.getElementById('freshLine');
+    if (fl) {
+      var firstDated = (window.GALLERY_PHOTOS || []).filter(function (x) { return x.dateText; })[0];
+      if (firstDated) fl.textContent = 'সর্বশেষ কার্যক্রম: ' + firstDated.dateText;
+    }
     var photos = (window.GALLERY_PHOTOS || []).slice(0, 3);
     var sec = document.getElementById('gallery');
     if (!photos.length) { sec.style.display = 'none'; return; }

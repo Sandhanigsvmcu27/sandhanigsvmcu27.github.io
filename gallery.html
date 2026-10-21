@@ -10,9 +10,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
 <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="pub">
 
 <header class="site">
   <img class="logo" src="../assets/sandhani-logo.jpg" alt="সন্ধানী লোগো">
@@ -35,6 +38,7 @@
 </header>
 
 <section>
+  <span class="kick">কার্যক্রম</span>
   <h3 class="sec">📰 সাম্প্রতিক কার্যক্রম</h3>
   <p style="margin-bottom:16px;">সন্ধানী গণস্বাস্থ্য সমাজ ভিত্তিক মেডিকেল কলেজ ইউনিটের সাম্প্রতিক কার্যক্রমসমূহ — নতুন কাজ সবার উপরে। ছবিতে চাপ দিলে বড় করে দেখা যাবে।</p>
   <div class="g-filters" id="gFilters"></div>
@@ -45,16 +49,37 @@
 <div id="lightbox">
   <div class="box">
     <img id="lbImg" src="" alt="">
-    <div class="cap" id="lbCap"></div>
-    <button class="btn gray" id="lbClose" style="margin-top:14px;">বন্ধ করুন ✕</button>
+    <div class="lb-title" id="lbTitle"></div>
+    <div class="lb-meta" id="lbMeta"></div>
+    <div class="lb-desc" id="lbDesc"></div>
+    <div class="lb-actions"><button class="btn gray" id="lbClose" style="margin-top:16px;">বন্ধ করুন ✕</button></div>
   </div>
 </div>
 
 <footer class="site" id="contact">
-  <strong>সন্ধানী — গণস্বাস্থ্য সমাজ ভিত্তিক মেডিকেল কলেজ ইউনিট</strong><br>
-  হাসপাতাল ভবন, ২য় তলা, রুম নং-২১৫, মির্জানগর, সাভার, ঢাকা-১৩৪৪<br>
-  রক্ত দিন, জীবন বাঁচান 🩸
+  <div class="fwrap">
+    <div class="fbrand">
+      <strong>সন্ধানী — গণস্বাস্থ্য সমাজ ভিত্তিক মেডিকেল কলেজ ইউনিট</strong>
+      <p>রক্ত দিন, জীবন বাঁচান 🩸</p>
+    </div>
+    <nav class="flinks">
+      <h4>গুরুত্বপূর্ণ লিংক</h4>
+      <a href="index.html">হোম</a>
+      <a href="request.html">রক্তের অনুরোধ</a>
+      <a href="track.html">অনুরোধ ট্র্যাক করুন</a>
+      <a href="gallery.html">কার্যক্রম</a>
+      <a href="shikkha.html">রক্তদানের নিয়মাবলী</a>
+    </nav>
+    <div class="fcontact">
+      <h4>যোগাযোগ</h4>
+      <p>হাসপাতাল ভবন, ২য় তলা, রুম নং-২১৫,<br>মির্জানগর, সাভার, ঢাকা-১৩৪৪</p>
+      <p><a href="https://www.facebook.com/sandhani.gsvmcu" target="_blank" rel="noopener">📘 আমাদের Facebook পেজ</a></p>
+    </div>
+  </div>
+  <p class="fcopy">© ২০২৬ সন্ধানী গণস্বাস্থ্য সমাজ ভিত্তিক মেডিকেল কলেজ ইউনিট</p>
 </footer>
+<a class="sticky-cta" href="request.html">🩸 জরুরি রক্ত লাগবে — অনুরোধ করুন</a>
+
 
 <script src="js/photos.js"></script>
 <script>
@@ -101,11 +126,19 @@
 
   function openLb(p) {
     document.getElementById('lbImg').src = p.src;
-    document.getElementById('lbCap').textContent = p.cap;
+    document.getElementById('lbImg').alt = p.cap || '';
+    document.getElementById('lbTitle').textContent = p.title || p.cap || '';
+    var meta = [];
+    if (p.dateText) meta.push('📅 ' + p.dateText);
+    if (p.place) meta.push('📍 ' + p.place);
+    document.getElementById('lbMeta').textContent = meta.join('  ·  ');
+    document.getElementById('lbDesc').textContent = p.desc || '';
     document.getElementById('lightbox').style.display = 'flex';
   }
-  document.getElementById('lbClose').addEventListener('click', function () { document.getElementById('lightbox').style.display = 'none'; });
-  document.getElementById('lightbox').addEventListener('click', function (e) { if (e.target === this) this.style.display = 'none'; });
+  function closeLb() { document.getElementById('lightbox').style.display = 'none'; }
+  document.getElementById('lbClose').addEventListener('click', closeLb);
+  document.getElementById('lightbox').addEventListener('click', function (e) { if (e.target === this) closeLb(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeLb(); });
 
   renderFilters();
   renderGrid();
