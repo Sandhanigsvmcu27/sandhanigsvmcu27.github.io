@@ -209,11 +209,111 @@ const Auth = {
     }
     if (!profile.active) {
       this.clear();
-      return { ok: false, error: 'এই অ্যাকাউন্ট নিষ্ক্রিয় করা হয়েছে।' };
+      return { ok: false, error: 'এই অ্যাকাউন্ট এখন সক্রিয় নয়। সাইন আপ করে থাকলে Admin-এর অনুমোদনের জন্য অপেক্ষা করুন।' };
     }
     sess.profile = profile;
     this._save(sess);
     return { ok: true, session: this.view(sess) };
+  },
+
+  /* নতুন সদস্যের সাইন আপ: অ্যাকাউন্ট তৈরি হয়, প্রোফাইল নিষ্ক্রিয় থাকে —
+     Admin member/users পেজ থেকে সক্রিয় করলে তবেই লগইন করা যায় */
+  async signUpMember(email, password, meta) {
+    let res, data;
+    try {
+      res = await fetch(SB_URL + '/auth/v1/signup', {
+        method: 'POST',
+        headers: { apikey: SB_ANON, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: String(email || '').trim(), password, data: meta || {} })
+      });
+      data = await res.json().catch(() => null);
+    } catch (e) {
+      return { ok: false, error: 'সার্ভারে যোগাযোগ করা যায়নি। ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন।' };
+    }
+    if (!res.ok) {
+      const msg = (data && (data.msg || data.message || data.error_description || data.error)) || '';
+      if (/already|registered/i.test(msg)) return { ok: false, error: 'এই ইমেইলে আগেই অ্যাকাউন্ট আছে — লগইন করুন।' };
+      if (/password/i.test(msg)) return { ok: false, error: 'পাসওয়ার্ড অন্তত ৬ অক্ষরের হতে হবে।' };
+      return { ok: false, error: 'সাইন আপ করা যায়নি। আবার চেষ্টা করুন।' };
+    }
+    if (data && data.access_token) {
+      const sess = {
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        expires_at: Date.now() + (data.expires_in || 3600) * 1000,
+        user: data.user,
+        profile: null
+      };
+      this._save(sess);
+      return { ok: true, session: sess, user: data.user };
+    }
+    return { ok: true, session: null, user: (data && data.user) || null };
+  },
+
+  /* প্রোফাইল ছবি: avatars/<uid>/avatar.jpg-তে আপলোড করে প্রোফাইলে URL বসায় */
+  async uploadAvatar(blob) {
+    const sess = this.session();
+    if (!sess || !sess.user || !sess.access_token) return false;
+    const path = sess.user.id + '/avatar.jpg';
+    try {
+      const r = await fetch(SB_URL + '/storage/v1/object/avatars/' + path, {
+        method: 'POST',
+        headers: { apikey: SB_ANON, Authorization: 'Bearer ' + sess.access_token, 'Content-Type': 'image/jpeg', 'x-upsert': 'true' },
+        body: blob
+      });
+      if (!r.ok) return false;
+      const url = SB_URL + '/storage/v1/object/public/avatars/' + path + '?v=' + Date.now();
+      await SB.post('/rpc/set_my_photo', { p_url: url });
+      return true;
+    } catch (e) { return false; }
+  },
+
+  /* পাসওয়ার্ড রিসেটের ইমেইল পাঠায় (লিংক reset.html-এ খোলে) */
+  async resetPassword(email) {
+    const redirectTo = location.origin + location.pathname.replace(/[^/]*$/, '') + 'reset.html';
+    try {
+      const r = await fetch(SB_URL + '/auth/v1/recover?redirect_to=' + encodeURIComponent(redirectTo), {
+        method: 'POST',
+        headers: { apikey: SB_ANON, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: String(email || '').trim() })
+      });
+      return r.ok;
+    } catch (e) { return false; }
+  },
+
+  /* রিসেট লিংক থেকে এলে hash-এর token দিয়ে সাময়িক session বসায় */
+  async acceptRecovery() {
+    const h = location.hash ? new URLSearchParams(location.hash.slice(1)) : new URLSearchParams();
+    if (h.get('type') !== 'recovery' || !h.get('access_token')) return false;
+    const sess = {
+      access_token: h.get('access_token'),
+      refresh_token: h.get('refresh_token'),
+      expires_at: Date.now() + parseInt(h.get('expires_in') || '3600', 10) * 1000,
+      user: null,
+      profile: null
+    };
+    try {
+      const r = await fetch(SB_URL + '/auth/v1/user', { headers: { apikey: SB_ANON, Authorization: 'Bearer ' + sess.access_token } });
+      if (r.ok) sess.user = await r.json();
+    } catch (e) { /* ignore */ }
+    if (!sess.user) return false;
+    this._save(sess);
+    history.replaceState(null, '', location.pathname);
+    return true;
+  },
+
+  /* নতুন পাসওয়ার্ড সেট করে (রিসেট session দিয়ে) */
+  async updatePassword(newPassword) {
+    const sess = this.session();
+    if (!sess || !sess.access_token) return false;
+    try {
+      const r = await fetch(SB_URL + '/auth/v1/user', {
+        method: 'PUT',
+        headers: { apikey: SB_ANON, Authorization: 'Bearer ' + sess.access_token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: newPassword })
+      });
+      return r.ok;
+    } catch (e) { return false; }
   },
 
   /* Google OAuth — Supabase authorize endpoint-এ পাঠায়; ফিরে আসে login.html-এ
