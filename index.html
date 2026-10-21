@@ -272,38 +272,42 @@
   })();
 </script>
 <script src="js/photos.js"></script>
+<script src="js/feed.js"></script>
 <script>
   function escH(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 
-  // হোমপেজে সাম্প্রতিক কার্যক্রমের প্রথম ৩টি; ছবি না থাকলে সেকশনটাই লুকিয়ে থাকে
+  // হোমপেজে সাম্প্রতিক কার্যক্রমের প্রথম ৩টি (DB + photos.js মিলিয়ে); ছবি না থাকলে সেকশনটাই লুকিয়ে থাকে
   (function () {
-    // সতেজতা লাইন — ফিডের প্রথম তারিখওয়ালা এন্ট্রি থেকে auto
-    var fl = document.getElementById('freshLine');
-    if (fl) {
-      var firstDated = (window.GALLERY_PHOTOS || []).filter(function (x) { return x.dateText; })[0];
-      if (firstDated) fl.textContent = 'সর্বশেষ কার্যক্রম: ' + firstDated.dateText;
-    }
-    var photos = (window.GALLERY_PHOTOS || []).slice(0, 3);
-    var sec = document.getElementById('gallery');
-    if (!photos.length) { sec.style.display = 'none'; return; }
-    var CATS = { blood: '🩸 রক্তদান', winter: '🧣 শীতবস্ত্র বিতরণ', iftar: '🌙 ইফতার মাহফিল', vaccine: '💉 টিকাদান', other: '🤝 অন্যান্য' };
-    var grid = document.getElementById('homeGallery');
-    photos.forEach(function (p) {
-      var meta = [];
-      if (p.dateText) meta.push('📅 ' + escH(p.dateText));
-      if (p.place) meta.push('📍 ' + escH(p.place));
-      var a = document.createElement('a');
-      a.href = 'gallery.html';
-      a.className = 'a-card';
-      a.style.textDecoration = 'none';
-      a.style.color = 'inherit';
-      a.innerHTML = '<img src="' + escH(p.src) + '" alt="" loading="lazy"><div class="body">' +
-        '<span class="cat">' + (CATS[p.cat] || '') + '</span>' +
-        '<div class="ttl">' + escH(p.title || p.cap) + '</div>' +
-        (meta.length ? '<div class="meta">' + meta.join(' · ') + '</div>' : '') +
-        (p.desc ? '<div class="desc">' + escH(p.desc) + '</div>' : '') +
-        '</div>';
-      grid.appendChild(a);
+    window.Feed.load(function (all) {
+      // সতেজতা লাইন — ফিডের প্রথম তারিখওয়ালা এন্ট্রি থেকে auto
+      var fl = document.getElementById('freshLine');
+      if (fl) {
+        var firstDated = all.filter(function (x) { return x.dateText; })[0];
+        if (firstDated) fl.textContent = 'সর্বশেষ কার্যক্রম: ' + firstDated.dateText;
+      }
+      var photos = all.slice(0, 3);
+      var sec = document.getElementById('gallery');
+      if (!photos.length) { sec.style.display = 'none'; return; }
+      var CATS = { blood: '🩸 রক্তদান', winter: '🧣 শীতবস্ত্র বিতরণ', iftar: '🌙 ইফতার মাহফিল', vaccine: '💉 টিকাদান', other: '🤝 অন্যান্য' };
+      var grid = document.getElementById('homeGallery');
+      photos.forEach(function (p) {
+        var meta = [];
+        if (p.dateText) meta.push('📅 ' + escH(p.dateText));
+        if (p.place) meta.push('📍 ' + escH(p.place));
+        var a = document.createElement('a');
+        a.href = 'gallery.html';
+        a.className = 'a-card';
+        a.style.textDecoration = 'none';
+        a.style.color = 'inherit';
+        a.innerHTML = '<img src="' + escH(p.photos[0]) + '" alt="" loading="lazy"><div class="body">' +
+          '<span class="cat">' + (CATS[p.cat] || '') + '</span>' +
+          '<div class="ttl">' + escH(p.title || p.cap) + '</div>' +
+          (meta.length ? '<div class="meta">' + meta.join(' · ') + '</div>' : '') +
+          (p.desc ? '<div class="desc">' + escH(p.desc) + '</div>' : '') +
+          (p.photos.length > 1 ? '<div class="meta">📷 মোট ' + bnDigits(p.photos.length) + 'টি ছবি — ভিতরে দেখুন</div>' : '') +
+          '</div>';
+        grid.appendChild(a);
+      });
     });
   })();
 

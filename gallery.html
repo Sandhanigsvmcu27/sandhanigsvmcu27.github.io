@@ -49,6 +49,11 @@
 <div id="lightbox">
   <div class="box">
     <img id="lbImg" src="" alt="">
+    <div id="lbNav" style="display:none;justify-content:space-between;align-items:center;margin-top:10px;">
+      <button class="btn gray" id="lbPrev">← আগের ছবি</button>
+      <span id="lbCount" style="font-weight:700;color:#555;"></span>
+      <button class="btn gray" id="lbNext">পরের ছবি →</button>
+    </div>
     <div class="lb-title" id="lbTitle"></div>
     <div class="lb-meta" id="lbMeta"></div>
     <div class="lb-desc" id="lbDesc"></div>
@@ -82,9 +87,11 @@
 
 
 <script src="js/photos.js"></script>
+<script src="js/config.js"></script>
+<script src="js/feed.js"></script>
 <script>
   var CATS = { all: 'সব', blood: '🩸 রক্তদান', winter: '🧣 শীতবস্ত্র বিতরণ', iftar: '🌙 ইফতার মাহফিল', vaccine: '💉 টিকাদান কর্মসূচি', other: '🤝 অন্যান্য' };
-  var photos = (window.GALLERY_PHOTOS || []);
+  var photos = [];
   var currentCat = 'all';
 
   function esc2(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -113,35 +120,59 @@
       if (p.place) meta.push('📍 ' + esc2(p.place));
       var d = document.createElement('div');
       d.className = 'a-card';
-      d.innerHTML = '<img src="' + esc2(p.src) + '" alt="' + esc2(p.cap) + '" loading="lazy"><div class="body">' +
+      d.innerHTML = '<img src="' + esc2(p.photos[0]) + '" alt="' + esc2(p.cap) + '" loading="lazy"><div class="body">' +
         '<span class="cat">' + esc2(CATS[p.cat] || '') + '</span>' +
         '<div class="ttl">' + esc2(p.title || p.cap) + '</div>' +
         (meta.length ? '<div class="meta">' + meta.join(' · ') + '</div>' : '') +
         (p.desc ? '<div class="desc">' + esc2(p.desc) + '</div>' : '') +
+        (p.photos.length > 1 ? '<div class="meta">📷 ' + p.photos.length + 'টি ছবি</div>' : '') +
         '</div>';
       d.addEventListener('click', function () { openLb(p); });
       grid.appendChild(d);
     });
   }
 
+  var lbItem = null, lbIdx = 0;
+  function lbShow() {
+    if (!lbItem) return;
+    document.getElementById('lbImg').src = lbItem.photos[lbIdx];
+    document.getElementById('lbImg').alt = lbItem.cap || '';
+    var multi = lbItem.photos.length > 1;
+    document.getElementById('lbNav').style.display = multi ? 'flex' : 'none';
+    document.getElementById('lbCount').textContent = multi ? (lbIdx + 1) + ' / ' + lbItem.photos.length : '';
+  }
   function openLb(p) {
-    document.getElementById('lbImg').src = p.src;
-    document.getElementById('lbImg').alt = p.cap || '';
+    lbItem = p; lbIdx = 0;
     document.getElementById('lbTitle').textContent = p.title || p.cap || '';
     var meta = [];
     if (p.dateText) meta.push('📅 ' + p.dateText);
     if (p.place) meta.push('📍 ' + p.place);
     document.getElementById('lbMeta').textContent = meta.join('  ·  ');
     document.getElementById('lbDesc').textContent = p.desc || '';
+    lbShow();
     document.getElementById('lightbox').style.display = 'flex';
   }
-  function closeLb() { document.getElementById('lightbox').style.display = 'none'; }
+  function lbMove(d) {
+    if (!lbItem) return;
+    lbIdx = (lbIdx + d + lbItem.photos.length) % lbItem.photos.length;
+    lbShow();
+  }
+  function closeLb() { document.getElementById('lightbox').style.display = 'none'; lbItem = null; }
   document.getElementById('lbClose').addEventListener('click', closeLb);
+  document.getElementById('lbPrev').addEventListener('click', function () { lbMove(-1); });
+  document.getElementById('lbNext').addEventListener('click', function () { lbMove(1); });
   document.getElementById('lightbox').addEventListener('click', function (e) { if (e.target === this) closeLb(); });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeLb(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeLb();
+    if (lbItem && e.key === 'ArrowLeft') lbMove(-1);
+    if (lbItem && e.key === 'ArrowRight') lbMove(1);
+  });
 
-  renderFilters();
-  renderGrid();
+  window.Feed.load(function (list) {
+    photos = list;
+    renderFilters();
+    renderGrid();
+  });
 </script>
 <script src="js/nav.js"></script>
 </body>
