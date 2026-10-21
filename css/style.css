@@ -265,3 +265,20 @@ body.pub #lightbox .lb-actions{text-align:center}
 body.pub .sticky-cta{animation:ctapulse 2.6s ease-in-out infinite}
 @keyframes ctapulse{0%,100%{box-shadow:0 -2px 10px rgba(198,40,40,.25)}50%{box-shadow:0 -2px 22px rgba(198,40,40,.55)}}
 @media (prefers-reduced-motion:reduce){.anim-drop .drop-fill,body.pub .sticky-cta{animation:none}}
+
+/* ---- call-first (2026-10-21): roster contact rows + 3 steps ---- */
+body.pub .call-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;margin-top:14px}
+body.pub .call-row{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff;border:1.5px solid #eee;border-radius:12px;padding:12px 14px}
+body.pub .call-row .who strong{display:block;font-size:17px}
+body.pub .call-row .who .num{color:#666;font-size:14px;letter-spacing:.3px}
+body.pub .call-row .acts,.call-general .acts{display:flex;gap:8px;align-items:center}
+body.pub .btn-call{background:#2e7d32;color:#fff;font-weight:700;padding:10px 14px;border-radius:9px;text-decoration:none;white-space:nowrap}
+body.pub .btn-wa{background:#25d366;color:#fff;width:42px;height:42px;border-radius:9px;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:19px;flex:none}
+body.pub .steps3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0 4px}
+body.pub .step3{background:#fff7f7;border:1.5px solid #f3d2d2;border-radius:12px;padding:12px;text-align:center}
+body.pub .step3 .n{display:inline-flex;width:30px;height:30px;border-radius:50%;background:#c62828;color:#fff;font-weight:800;align-items:center;justify-content:center;margin-bottom:6px}
+body.pub .step3 strong{display:block;margin-bottom:2px}
+body.pub .step3 .lbl{font-size:13px;color:#666}
+body.pub .call-general{margin-top:14px;background:#f6f8fb;border:1.5px solid #d5e3f5;border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.float-social a.call{background:#d32f2f}
+@media (max-width:640px){body.pub .steps3{gap:6px}body.pub .step3{padding:9px 4px}body.pub .step3 .lbl{font-size:11px}}
