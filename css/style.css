@@ -216,9 +216,9 @@ body.pub .stock-card .vn{font-size:19px}
 body.pub .stock-card .stat{display:inline-block;margin-top:9px;padding:3px 14px;border-radius:999px;font-size:15px;background:#eef1f4}
 body.pub .stock-card .stat.ok{background:#e6f4ea}
 body.pub .stock-card .stat.low{background:#fef7e0}
-body.pub .stock-card .stat.out{background:#eef1f4}
+body.pub .stock-card .stat.out{background:#fdecea;color:#c62828}
 body.pub .stock-card.low{background:#fffdf4;border-color:#efdf9e}
-body.pub .stock-card.out{background:#fbfbfc;border-color:#e3e7ee}
+body.pub .stock-card.out{background:#fff7f7;border-color:#f0c6c6}
 
 /* feed freshness line (index) */
 body.pub .fresh-line{font-size:14px;color:#666;margin:-8px 0 14px}
