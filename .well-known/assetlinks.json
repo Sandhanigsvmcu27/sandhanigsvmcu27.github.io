@@ -1,12 +1,8 @@
-[
-  {
-    "relation": ["delegate_permission/common.handle_all_urls"],
-    "target": {
-      "namespace": "android_app",
-      "package_name": "io.github.sandhanigsvmcu27",
-      "sha256_cert_fingerprints": [
-        "E1:81:56:F0:74:76:BD:ED:2D:E7:BA:BF:C9:7F:AF:66:2B:1E:6C:7F:E5:F7:CF:4E:43:24:9B:7F:FA:CD:78:D7"
-      ]
-    }
-  }
-]
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.sandhanigsvmcu27",
+        "sha256_cert_fingerprints": ["99:30:13:A1:6D:41:72:94:3E:88:18:0C:71:42:F4:C0:E9:D8:6C:04:4E:E9:96:16:9E:6D:81:77:58:6F:E7:AD"]
+      }
+    }]
