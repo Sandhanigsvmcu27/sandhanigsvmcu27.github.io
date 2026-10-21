@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var fs = document.createElement('div');
     fs.className = 'float-social';
     fs.innerHTML =
+      '<a class="call" href="tel:+8801755085138" aria-label="জরুরি প্রয়োজনে কল করুন" title="জরুরি প্রয়োজনে কল করুন">📞</a>' +
       '<a class="fb" href="https://www.facebook.com/sandhani.gsvmcu" target="_blank" rel="noopener" aria-label="Facebook পেজ" title="Facebook পেজ">f</a>' +
       '<a class="msgr" href="https://m.me/sandhani.gsvmcu" target="_blank" rel="noopener" aria-label="Messenger" title="Messenger-এ মেসেজ করুন">💬</a>';
     document.body.appendChild(fs);
