@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>কার্যক্রম যোগ করুন — সন্ধানী মেম্বার এরিয়া</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  .thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+  .thumbs img{width:76px;height:76px;object-fit:cover;border-radius:8px;border:1px solid #ddd;}
+  .act-row{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid #eee;}
+  .act-row img{width:64px;height:64px;object-fit:cover;border-radius:8px;}
+</style>
+</head>
+<body>
+
+<div class="member-shell">
+  <div class="member-main">
+    <h2 class="page">🖼️ কার্যক্রম যোগ করুন</h2>
+    <div class="err" id="pageErr" style="display:none;"></div>
+    <div class="okbox" id="okMsg" style="display:none;">✅ কার্যক্রম যোগ হয়েছে — হোমপেজ ও গ্যালারিতে এখনই দেখা যাচ্ছে।</div>
+
+    <div class="card" style="margin-bottom:18px;">
+      <form class="f" id="actForm" onsubmit="return false">
+        <div>
+          <label for="aTitle">শিরোনাম *</label>
+          <input type="text" id="aTitle" required placeholder="যেমন: স্বেচ্ছায় রক্তদান কর্মসূচি">
+        </div>
+        <div>
+          <label for="aCat">বিভাগ</label>
+          <select id="aCat" style="padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;">
+            <option value="blood">🩸 রক্তদান</option>
+            <option value="vaccine">💉 টিকাদান কর্মসূচি</option>
+            <option value="winter">🧣 শীতবস্ত্র বিতরণ</option>
+            <option value="iftar">🌙 ইফতার মাহফিল</option>
+            <option value="other" selected>🤝 অন্যান্য</option>
+          </select>
+        </div>
+        <div>
+          <label for="aDate">তারিখ (বাংলায় লিখুন)</label>
+          <input type="text" id="aDate" placeholder="যেমন: ২১ অক্টোবর ২০২৬">
+        </div>
+        <div>
+          <label for="aPlace">স্থান</label>
+          <input type="text" id="aPlace" placeholder="যেমন: জিয়া উদ্যান, ঢাকা">
+        </div>
+        <div>
+          <label for="aDesc">বিবরণ / ক্যাপশন *</label>
+          <textarea id="aDesc" rows="3" required placeholder="কার্যক্রমের সংক্ষিপ্ত বিবরণ লিখুন"></textarea>
+        </div>
+        <div>
+          <label for="aPhotos">ছবি * (একাধিক ছবি একসাথে বেছে নেওয়া যাবে — প্রথম ছবিটা কার্ডে দেখাবে)</label>
+          <input type="file" id="aPhotos" accept="image/*" multiple required>
+          <div class="thumbs" id="thumbs"></div>
+          <p class="note">ছবি স্বয়ংক্রিয়ভাবে ছোট (রিসাইজ) হয়ে আপলোড হবে — বড় ছবি দিলেও সমস্যা নেই।</p>
+        </div>
+        <button type="submit" id="aBtn">কার্যক্রম প্রকাশ করুন →</button>
+        <p class="note" id="upState" style="display:none;"></p>
+      </form>
+    </div>
+
+    <div class="card">
+      <h4 style="margin-bottom:8px;">আপলোড করা কার্যক্রমসমূহ</h4>
+      <div id="actList"><p class="note">লোড হচ্ছে…</p></div>
+      <p class="note" style="margin-top:10px;">পুরনো কার্যক্রমগুলো (আগের ১৭টি) সিস্টেমের ভিতরে সংরক্ষিত — সেগুলো বদলাতে হলে Admin-কে বলুন। এখান থেকে শুধু নতুন আপলোড করা কার্যক্রম মুছা যায় (শুধু অ্যাডমিন)।</p>
+    </div>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/app.js"></script>
+<script>
+  (async function init() {
+    const sess = await Auth.guard(false); // any active team member
+    if (!sess) return;
+    document.querySelector('.member-shell').insertAdjacentHTML('afterbegin', sidebarHTML('activity.html', sess));
+    const isAdmin = sess.role === 'admin';
+
+    const fileInput = document.getElementById('aPhotos');
+    fileInput.addEventListener('change', function () {
+      const box = document.getElementById('thumbs');
+      box.innerHTML = '';
+      Array.from(fileInput.files || []).forEach(function (f) {
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(f);
+        box.appendChild(img);
+      });
+    });
+
+    function resizeToBlob(file) {
+      return new Promise(function (resolve) {
+        const img = new Image();
+        img.onload = function () {
+          const max = 1280, scale = Math.min(1, max / Math.max(img.width, img.height));
+          const c = document.createElement('canvas');
+          c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          URL.revokeObjectURL(img.src);
+          c.toBlob(function (b) { resolve(b); }, 'image/jpeg', 0.82);
+        };
+        img.onerror = function () { resolve(null); };
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
+    async function uploadOne(blob, path) {
+      const s = Auth.session();
+      const r = await fetch(SB_URL + '/storage/v1/object/activity-photos/' + path, {
+        method: 'POST',
+        headers: { apikey: SB_ANON, Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'image/jpeg', 'x-upsert': 'true' },
+        body: blob
+      });
+      if (!r.ok) throw new Error('upload failed');
+      return SB_URL + '/storage/v1/object/public/activity-photos/' + path;
+    }
+
+    document.getElementById('actForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      hidePageError();
+      const files = Array.from(fileInput.files || []);
+      if (!files.length) { showPageError('অন্তত একটি ছবি বেছে নিন।'); return; }
+      const btn = document.getElementById('aBtn');
+      const state = document.getElementById('upState');
+      btn.disabled = true;
+      const actId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
+      const urls = [];
+      try {
+        for (let i = 0; i < files.length; i++) {
+          state.style.display = 'block';
+          state.textContent = 'ছবি আপলোড হচ্ছে… ' + (i + 1) + '/' + files.length;
+          const blob = await resizeToBlob(files[i]);
+          if (!blob) continue;
+          urls.push(await uploadOne(blob, actId + '/' + (i + 1) + '.jpg'));
+        }
+        if (!urls.length) throw new Error('no photo');
+        state.textContent = 'সংরক্ষণ হচ্ছে…';
+        await SB.post('/activities', {
+          id: actId,
+          title: document.getElementById('aTitle').value.trim(),
+          cat: document.getElementById('aCat').value,
+          date_text: document.getElementById('aDate').value.trim() || null,
+          place: document.getElementById('aPlace').value.trim() || null,
+          description: document.getElementById('aDesc').value.trim(),
+          photos: urls,
+          created_by: sess.name
+        });
+        document.getElementById('okMsg').style.display = 'block';
+        document.getElementById('actForm').reset();
+        document.getElementById('thumbs').innerHTML = '';
+        state.style.display = 'none';
+        loadList();
+      } catch (err) {
+        showPageError('কার্যক্রম যোগ করা যায়নি, আবার চেষ্টা করুন।');
+        state.style.display = 'none';
+      }
+      btn.disabled = false;
+    });
+
+    async function loadList() {
+      const box = document.getElementById('actList');
+      let rows = [];
+      try { rows = await SB.get('/activities?select=id,title,date_text,photos,created_at&order=created_at.desc') || []; } catch (e) { rows = []; }
+      if (!rows.length) { box.innerHTML = '<p class="note">এখনো এই পেজ থেকে কোনো কার্যক্রম যোগ হয়নি।</p>'; return; }
+      box.innerHTML = '';
+      rows.forEach(function (a) {
+        const d = document.createElement('div');
+        d.className = 'act-row';
+        d.innerHTML = '<img src="' + esc((a.photos || [])[0] || '') + '" alt="">' +
+          '<div style="flex:1;"><strong>' + esc(a.title) + '</strong><br><span class="note">' +
+          esc(a.date_text || '') + ' · 📷 ' + (a.photos || []).length + 'টি ছবি</span></div>' +
+          (isAdmin ? '<button class="btn small gray" data-del="' + a.id + '">মুছুন</button>' : '');
+        box.appendChild(d);
+      });
+    }
+
+    document.getElementById('actList').addEventListener('click', async function (e) {
+      const b = e.target.closest('[data-del]');
+      if (!b) return;
+      if (!confirm('এই কার্যক্রমটি মুছে ফেলতে চান? হোমপেজ/গ্যালারি থেকে চলে যাবে।')) return;
+      try {
+        const s = Auth.session();
+        const r = await fetch(SB_URL + '/rest/v1/activities?id=eq.' + encodeURIComponent(b.getAttribute('data-del')), {
+          method: 'DELETE',
+          headers: { apikey: SB_ANON, Authorization: 'Bearer ' + s.access_token }
+        });
+        if (!r.ok) throw new Error('del failed');
+        loadList();
+      } catch (err) { alert('মোছা যায়নি, আবার চেষ্টা করুন।'); }
+    });
+
+    loadList();
+  })();
+</script>
+</body>
+</html>
