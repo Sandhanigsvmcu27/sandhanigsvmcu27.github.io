@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>সদস্য সাইন আপ — সন্ধানী GSVMC ইউনিট</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .grp-chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .grp-chips button{flex:1 1 64px;padding:10px 4px;border:1.5px solid #d9d9d9;background:#fff;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .grp-chips button.sel{background:#c62828;border-color:#c62828;color:#fff;}
+  .pw-wrap{position:relative;}
+  .pw-wrap .eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:18px;cursor:pointer;padding:4px;}
+  .photo-prev{width:96px;height:96px;border-radius:50%;object-fit:cover;border:2px solid #eee;display:none;margin-top:8px;}
+</style>
+</head>
+<body class="pub">
+
+<header class="site">
+  <img class="logo" src="../assets/sandhani-logo.jpg" alt="সন্ধানী লোগো">
+  <div class="org">
+    <h1>সন্ধানী</h1>
+    <p>গণস্বাস্থ্য সমাজ ভিত্তিক মেডিকেল কলেজ ইউনিট</p>
+  </div>
+  <button class="nav-toggle" id="navToggle" aria-label="মেনু">☰</button>
+  <nav class="main" id="mainNav">
+    <a href="index.html">হোম</a>
+    <a href="index.html#stock">স্টক</a>
+    <a href="index.html#activities">কার্যক্রম</a>
+    <a href="request.html">রক্তের অনুরোধ</a>
+    <a href="track.html">অনুরোধ ট্র্যাক</a>
+    <a href="shikkha.html">রক্তদান সম্পর্কে</a>
+    <a href="index.html#rules">নিয়মাবলী</a>
+    <a class="emergency" href="request.html">🩸 জরুরি রক্ত লাগবে</a>
+    <a class="login" href="login.html">মেম্বার লগইন</a>
+  </nav>
+</header>
+
+<section style="max-width:560px;">
+  <h3 class="sec">সদস্য সাইন আপ</h3>
+
+  <div class="card" id="signupCard">
+    <p class="note" style="margin-bottom:14px;">শুধুমাত্র <strong>সন্ধানী গণস্বাস্থ্য সমাজ ভিত্তিক মেডিকেল কলেজ ইউনিটের</strong> টিম সদস্যদের জন্য। ফর্ম জমা দিলেই ভিতরে ঢোকা যাবে না — <strong>Admin অনুমোদন</strong> দিলে এই ইমেইল ও পাসওয়ার্ড দিয়েই লগইন করতে পারবেন।</p>
+    <div class="err" id="suErr" style="display:none;"></div>
+    <form class="f" id="signupForm">
+      <div>
+        <label for="suName">পুরো নাম *</label>
+        <input type="text" id="suName" required placeholder="যেমন: মোঃ উদাহরণ হোসেন" autocomplete="name">
+      </div>
+      <div>
+        <label for="suEmail">ইমেইল *</label>
+        <input type="email" id="suEmail" required placeholder="name@example.com" autocomplete="email">
+      </div>
+      <div>
+        <label for="suPass">পাসওয়ার্ড * (অন্তত ৬ অক্ষর)</label>
+        <div class="pw-wrap">
+          <input type="password" id="suPass" required minlength="6" placeholder="••••••••" autocomplete="new-password" style="width:100%;">
+          <button type="button" class="eye" id="pwEye" aria-label="পাসওয়ার্ড দেখুন">👁️</button>
+        </div>
+      </div>
+      <div>
+        <label for="suPhone">মোবাইল নম্বর *</label>
+        <input type="tel" id="suPhone" required placeholder="01XXXXXXXXX" autocomplete="tel">
+      </div>
+      <div>
+        <label for="suBatch">ব্যাচ</label>
+        <input type="text" id="suBatch" placeholder="যেমন: MBBS 27 / BDS 5">
+      </div>
+      <div>
+        <label>রক্তের গ্রুপ *</label>
+        <div class="grp-chips" id="grpChips"></div>
+      </div>
+      <div>
+        <label for="suPhoto">প্রোফাইল ছবি</label>
+        <input type="file" id="suPhoto" accept="image/*">
+        <img class="photo-prev" id="photoPrev" alt="ছবির প্রিভিউ">
+        <p class="note">নিজের পরিষ্কার একটি ছবি দিন — Admin আপনাকে চিনতে সুবিধা হবে।</p>
+      </div>
+      <button type="submit" id="suBtn">আবেদন জমা দিন →</button>
+    </form>
+    <p class="note" style="margin-top:14px;text-align:center;">আগেই অ্যাকাউন্ট আছে? <a href="login.html"><strong>লগইন করুন</strong></a></p>
+  </div>
+
+  <div class="card" id="doneCard" style="display:none;text-align:center;">
+    <div style="font-size:44px;">✅</div>
+    <h4 style="margin:8px 0;">আবেদন জমা হয়েছে!</h4>
+    <p class="note" style="font-size:15px;">ধন্যবাদ। আপনার তথ্য Admin-এর কাছে পৌঁছেছে। <strong>Admin অনুমোদন দিলে</strong> এই ইমেইল ও পাসওয়ার্ড দিয়ে লগইন করতে পারবেন।</p>
+    <p style="margin-top:14px;"><a class="btn green" href="login.html" style="display:inline-block;text-decoration:none;">লগইন পেজে যান →</a></p>
+  </div>
+</section>
+
+<footer class="site">
+  <div class="fwrap">
+    <div class="fbrand">
+      <strong>সন্ধানী — গণস্বাস্থ্য সমাজ ভিত্তিক মেডিকেল কলেজ ইউনিট</strong>
+      <p>রক্ত দিন, জীবন বাঁচান 🩸</p>
+    </div>
+    <nav class="flinks">
+      <h4>গুরুত্বপূর্ণ লিংক</h4>
+      <a href="index.html">হোম</a>
+      <a href="request.html">রক্তের অনুরোধ</a>
+      <a href="track.html">অনুরোধ ট্র্যাক করুন</a>
+      <a href="gallery.html">কার্যক্রম</a>
+      <a href="shikkha.html">রক্তদানের নিয়মাবলী</a>
+    </nav>
+    <div class="fcontact">
+      <h4>যোগাযোগ</h4>
+      <p>হাসপাতাল ভবন, ২য় তলা, রুম নং-২১৫,<br>মির্জানগর, সাভার, ঢাকা-১৩৪৪</p>
+      <p><a href="https://www.facebook.com/sandhani.gsvmcu" target="_blank" rel="noopener">📘 আমাদের Facebook পেজ</a></p>
+    </div>
+  </div>
+  <p class="fcopy">© ২০২৬ সন্ধানী গণস্বাস্থ্য সমাজ ভিত্তিক মেডিকেল কলেজ ইউনিট</p>
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+<script>
+  var GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
+  var pickedGroup = '';
+  var chipsBox = document.getElementById('grpChips');
+  GROUPS.forEach(function (g) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.textContent = grpDisplay(g); b.setAttribute('data-g', g);
+    b.addEventListener('click', function () {
+      pickedGroup = g;
+      chipsBox.querySelectorAll('button').forEach(function (x) { x.classList.toggle('sel', x === b); });
+    });
+    chipsBox.appendChild(b);
+  });
+
+  document.getElementById('pwEye').addEventListener('click', function () {
+    var p = document.getElementById('suPass');
+    p.type = p.type === 'password' ? 'text' : 'password';
+  });
+
+  var photoBlob = null;
+  document.getElementById('suPhoto').addEventListener('change', function (e) {
+    var file = e.target.files && e.target.files[0];
+    photoBlob = null;
+    if (!file) return;
+    var img = new Image();
+    img.onload = function () {
+      var max = 512, scale = Math.min(1, max / Math.max(img.width, img.height));
+      var c = document.createElement('canvas');
+      c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      var prev = document.getElementById('photoPrev');
+      prev.src = c.toDataURL('image/jpeg', 0.85); prev.style.display = 'block';
+      c.toBlob(function (b) { photoBlob = b; }, 'image/jpeg', 0.85);
+      URL.revokeObjectURL(img.src);
+    };
+    img.src = URL.createObjectURL(file);
+  });
+
+  function showErr(msg) {
+    var el = document.getElementById('suErr');
+    el.style.display = 'block'; el.textContent = msg;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  document.getElementById('signupForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    document.getElementById('suErr').style.display = 'none';
+    var phone = document.getElementById('suPhone').value.trim();
+    if (!/^01[3-9]\d{8}$/.test(phone)) { showErr('সঠিক মোবাইল নম্বর দিন (01 দিয়ে শুরু ১১ ডিজিট)।'); return; }
+    if (!pickedGroup) { showErr('আপনার রক্তের গ্রুপ বেছে নিন।'); return; }
+    var btn = document.getElementById('suBtn');
+    btn.disabled = true; btn.textContent = 'জমা হচ্ছে…';
+    var res = await Auth.signUpMember(
+      document.getElementById('suEmail').value,
+      document.getElementById('suPass').value,
+      {
+        full_name: document.getElementById('suName').value.trim(),
+        phone: phone,
+        batch: document.getElementById('suBatch').value.trim(),
+        blood_group: pickedGroup
+      }
+    );
+    if (!res.ok) { showErr(res.error); btn.disabled = false; btn.textContent = 'আবেদন জমা দিন →'; return; }
+    if (photoBlob && res.session) { await Auth.uploadAvatar(photoBlob); }
+    Auth.clear();
+    document.getElementById('signupCard').style.display = 'none';
+    document.getElementById('doneCard').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+</script>
+<script src="js/nav.js"></script>
+</body>
+</html>

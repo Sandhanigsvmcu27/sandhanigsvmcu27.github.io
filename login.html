@@ -52,7 +52,19 @@
       </div>
       <button type="submit" id="loginBtn">লগইন →</button>
     </form>
-    <p class="note" style="margin-top:14px;">শুধুমাত্র সন্ধানী টিমের সদস্যদের জন্য। টিমের সদস্য হলে নিজের Gmail দিয়ে Google লগইন করুন — Admin অনুমোদন দিলেই ভিতরে ঢুকতে পারবেন।</p>
+    <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:14px;">
+      <a href="#" id="forgotLink" style="color:#c62828;font-weight:600;">পাসওয়ার্ড ভুলে গেছেন?</a>
+      <span>অ্যাকাউন্ট নেই? <a href="signup.html" style="color:#1565c0;font-weight:700;">সাইন আপ করুন →</a></span>
+    </div>
+    <div id="forgotBox" style="display:none;margin-top:12px;background:#f6f8fb;border:1.5px solid #d5e3f5;padding:12px 14px;border-radius:10px;">
+      <p class="note" style="margin-bottom:8px;">আপনার ইমেইল দিন — পাসওয়ার্ড বদলানোর লিংক পাঠিয়ে দেব।</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <input type="email" id="forgotEmail" placeholder="name@example.com" style="flex:1;min-width:180px;padding:10px;border:1.5px solid #ccc;border-radius:8px;font-family:inherit;">
+        <button type="button" id="forgotBtn" class="btn small">লিংক পাঠান</button>
+      </div>
+      <p class="note" id="forgotMsg" style="display:none;margin-top:8px;color:#2e7d32;"></p>
+    </div>
+    <p class="note" style="margin-top:14px;">শুধুমাত্র সন্ধানী টিমের সদস্যদের জন্য। নতুন সদস্য হলে আগে <a href="signup.html">সাইন আপ</a> করুন — Admin অনুমোদন দিলেই লগইন করতে পারবেন। আগে থেকে অনুমোদিত Gmail থাকলে Google দিয়েও লগইন করা যায়।</p>
   </div>
 </section>
 
@@ -97,6 +109,23 @@
     const sess = await Auth.ensureFresh();
     if (sess) location.href = 'member/dashboard.html';
   })();
+
+  document.getElementById('forgotLink').addEventListener('click', function (e) {
+    e.preventDefault();
+    const box = document.getElementById('forgotBox');
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    const em = document.getElementById('email').value.trim();
+    if (em) document.getElementById('forgotEmail').value = em;
+  });
+  document.getElementById('forgotBtn').addEventListener('click', async function () {
+    const em = document.getElementById('forgotEmail').value.trim();
+    const msg = document.getElementById('forgotMsg');
+    if (!em) { msg.style.display = 'block'; msg.style.color = '#c62828'; msg.textContent = 'আগে ইমেইলটি লিখুন।'; return; }
+    this.disabled = true;
+    await Auth.resetPassword(em);
+    msg.style.display = 'block'; msg.style.color = '#2e7d32';
+    msg.textContent = '✅ রিসেট লিংক পাঠানো হয়েছে (এই ইমেইলে অ্যাকাউন্ট থাকলে)। ইনবক্স/স্প্যাম দেখুন।';
+  });
 
   document.getElementById('loginForm').addEventListener('submit', async function (e) {
     e.preventDefault();
