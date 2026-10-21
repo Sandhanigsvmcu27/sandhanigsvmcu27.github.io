@@ -167,7 +167,7 @@
   document.getElementById('signupForm').addEventListener('submit', async function (e) {
     e.preventDefault();
     document.getElementById('suErr').style.display = 'none';
-    var phone = document.getElementById('suPhone').value.trim();
+    var phone = document.getElementById('suPhone').value.trim().replace(/[\s-]/g, '').replace(/^\+?880/, '0');
     if (!/^01[3-9]\d{8}$/.test(phone)) { showErr('সঠিক মোবাইল নম্বর দিন (01 দিয়ে শুরু ১১ ডিজিট)।'); return; }
     if (!pickedGroup) { showErr('আপনার রক্তের গ্রুপ বেছে নিন।'); return; }
     var btn = document.getElementById('suBtn');
