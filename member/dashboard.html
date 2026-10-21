@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ড্যাশবোর্ড — সন্ধানী মেম্বার এরিয়া</title>
 <link rel="stylesheet" href="../css/style.css">
+<meta name="theme-color" content="#d32f2f">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="../assets/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
 </head>
 <body>
 
@@ -14,6 +19,23 @@
     <div class="err" id="pageErr" style="display:none;"></div>
 
     <div class="stats" id="stats"></div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <h4 style="margin-bottom:10px;">👤 আমার প্রোফাইল</h4>
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+        <span id="myPhotoWrap" style="width:72px;height:72px;border-radius:50%;background:#eceff1;display:inline-flex;align-items:center;justify-content:center;font-size:30px;overflow:hidden;">👤</span>
+        <div style="flex:1;min-width:200px;">
+          <div><strong id="myName"></strong></div>
+          <div class="note" style="margin-top:2px;" id="myRole"></div>
+          <div style="margin-top:8px;">
+            <input type="file" id="myPhotoFile" accept="image/*" style="display:none;">
+            <button class="btn small blue" id="myPhotoPick" type="button">📷 ছবি বাছুন</button>
+            <button class="btn small green" id="myPhotoSave" type="button" style="display:none;">💾 সংরক্ষণ করুন</button>
+            <span class="note" id="myPhotoMsg" style="display:none;margin-left:8px;"></span>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="grid2">
       <div class="card">
@@ -35,6 +57,62 @@
     const sess = await Auth.guard(false);
     if (!sess) return; // redirect হয়েছে
     document.querySelector('.member-shell').insertAdjacentHTML('afterbegin', sidebarHTML('dashboard.html', sess));
+
+    // ── প্রোফাইল ছবি: add/change (নিজের ছবি নিজেই বসাতে পারবে) ──
+    document.getElementById('myName').textContent = sess.name;
+    document.getElementById('myRole').textContent = (sess.role === 'admin' ? 'অ্যাডমিন' : 'টিম মেম্বার') + ' · ' + sess.email;
+    var myPhotoBlob = null;
+    function setMyPhoto(src) {
+      var w = document.getElementById('myPhotoWrap');
+      w.innerHTML = src
+        ? '<img src="' + esc(src) + '" alt="প্রোফাইল ছবি" style="width:72px;height:72px;border-radius:50%;object-fit:cover;display:block;">'
+        : '👤';
+    }
+    try {
+      var prow = await SB.get('/profiles?select=photo_url&id=eq.' + encodeURIComponent(sess.userId));
+      if (prow && prow[0] && prow[0].photo_url) setMyPhoto(prow[0].photo_url);
+    } catch (e) { /* ছবি না থাকলে placeholder-ই থাকবে */ }
+    document.getElementById('myPhotoPick').addEventListener('click', function () {
+      document.getElementById('myPhotoFile').click();
+    });
+    document.getElementById('myPhotoFile').addEventListener('change', function (e) {
+      var file = e.target.files && e.target.files[0];
+      myPhotoBlob = null;
+      document.getElementById('myPhotoSave').style.display = 'none';
+      if (!file) return;
+      var img = new Image();
+      img.onload = function () {
+        var max = 512, scale = Math.min(1, max / Math.max(img.width, img.height));
+        var c = document.createElement('canvas');
+        c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        c.toBlob(function (b) {
+          myPhotoBlob = b;
+          document.getElementById('myPhotoSave').style.display = 'inline-block';
+        }, 'image/jpeg', 0.85);
+        URL.revokeObjectURL(img.src);
+      };
+      img.src = URL.createObjectURL(file);
+    });
+    document.getElementById('myPhotoSave').addEventListener('click', async function () {
+      if (!myPhotoBlob) return;
+      var msg = document.getElementById('myPhotoMsg');
+      var btn = document.getElementById('myPhotoSave');
+      btn.disabled = true; btn.textContent = 'আপলোড হচ্ছে…';
+      msg.style.display = 'none';
+      var ok = await Auth.uploadAvatar(myPhotoBlob);
+      if (ok) {
+        try {
+          var prow2 = await SB.get('/profiles?select=photo_url&id=eq.' + encodeURIComponent(sess.userId));
+          if (prow2 && prow2[0] && prow2[0].photo_url) setMyPhoto(prow2[0].photo_url);
+        } catch (e) {}
+        msg.textContent = '✅ ছবি সংরক্ষিত হয়েছে।'; msg.style.display = 'inline';
+        btn.style.display = 'none';
+      } else {
+        msg.textContent = '❌ আপলোড হয়নি — ইন্টারনেট দেখে আবার চেষ্টা করুন।'; msg.style.display = 'inline';
+      }
+      btn.disabled = false; btn.textContent = '💾 সংরক্ষণ করুন';
+    });
 
     try {
       // Summary counts — Prefer: count=exact দিয়ে (হালকা select)
@@ -77,5 +155,6 @@
     }
   })();
 </script>
+<script src="../js/pwa.js"></script>
 </body>
 </html>
