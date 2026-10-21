@@ -231,7 +231,7 @@
         const s = byGroup[g] || { bags: 0, updated_at: null, updated_by: '' };
         if (s.updated_at && (!latest || s.updated_at > latest)) { latest = s.updated_at; latestBy = s.updated_by || ''; }
         // পাবলিকে শুধু স্ট্যাটাস — সঠিক সংখ্যা কখনোই নয় (Admin-এর সিদ্ধান্ত, ২০২৬-১০-২০)
-        const st = s.bags >= 3 ? { cls: 'ok', txt: '🟢 আছে' } : (s.bags >= 1 ? { cls: 'low', txt: '🟡 সীমিত আছে' } : { cls: 'out', txt: '⚪ বর্তমানে নেই' });
+        const st = s.bags >= 1 ? { cls: 'ok', txt: '🟢 আছে' } : { cls: 'out', txt: '🔴 নেই' };
         const div = document.createElement('div');
         div.className = 'stock-card ' + st.cls;
         div.innerHTML = '<div class="grp">' + grpDisplay(g) + '</div><div class="stat ' + st.cls + '">' + st.txt + '</div>';
@@ -249,7 +249,7 @@
   })();
 </script>
 <script>
-  // টিকাদান — পাবলিকে শুধু স্ট্যাটাস (আছে/সীমিত/নেই), ডোজের সংখ্যা নয়
+  // টিকাদান — পাবলিকে শুধু স্ট্যাটাস (আছে/নেই), ডোজের সংখ্যা নয়
   (async function loadVax() {
     const grid = document.getElementById('vaxGrid');
     if (!grid) return;
@@ -258,7 +258,7 @@
       let latest = null;
       (rows || []).forEach(v => {
         if (v.updated_at && (!latest || v.updated_at > latest)) latest = v.updated_at;
-        const st = v.doses >= 10 ? { cls: 'ok', txt: '🟢 পাওয়া যাচ্ছে' } : (v.doses >= 1 ? { cls: 'low', txt: '🟡 সীমিত আছে' } : { cls: 'out', txt: '⚪ বর্তমানে নেই' });
+        const st = v.doses >= 1 ? { cls: 'ok', txt: '🟢 পাওয়া যাচ্ছে' } : { cls: 'out', txt: '🔴 নেই' };
         const div = document.createElement('div');
         div.className = 'stock-card ' + st.cls;
         div.innerHTML = '<div class="vn">' + esc(v.name) + '</div><div class="stat ' + st.cls + '">' + st.txt + '</div>';
