@@ -16,16 +16,16 @@
     <div class="card" style="margin-bottom:18px;">
       <h4 style="margin-bottom:10px;">➕ নতুন টিম মেম্বার যোগ করা</h4>
       <div class="okbox">
-        নতুন লগইন অ্যাকাউন্ট এই পেজ থেকে তৈরি করা যায় না — নিরাপত্তার কারণে অ্যাকাউন্ট তৈরি হয়
-        <strong>Supabase Dashboard → Authentication → Users → Add user</strong> থেকে।
-        অ্যাকাউন্ট তৈরি ও প্রোফাইল যোগ হলে এখানে তাদের <strong>রোল</strong> (টিম/অ্যাডমিন) ও
-        <strong>সক্রিয় অবস্থা</strong> বদলাতে পারবেন।
+        নতুন সদস্য নিজেই <strong>সাইন আপ পেজ</strong> থেকে ফর্ম পূরণ করে আবেদন করেন (নাম, ইমেইল, ফোন, ব্যাচ, রক্তের গ্রুপ ও ছবিসহ)।
+        আবেদন করলেই এই তালিকায় <strong>"নিষ্ক্রিয়"</strong> অবস্থায় নাম আসে — আপনি যাচাই করে
+        <strong>"সক্রিয় করুন"</strong> চাপলেই তিনি লগইন করতে পারবেন। এখান থেকে <strong>রোল</strong> (টিম/অ্যাডমিন) ও
+        সক্রিয় অবস্থা বদলাতে পারবেন।
       </div>
     </div>
 
     <div style="overflow-x:auto;">
       <table class="t">
-        <thead><tr><th>নাম</th><th>ইমেইল</th><th>ফোন</th><th>রোল</th><th>অবস্থা</th><th>অ্যাকশন</th></tr></thead>
+        <thead><tr><th>নাম</th><th>ইমেইল</th><th>ফোন</th><th>ব্যাচ / গ্রুপ</th><th>রোল</th><th>অবস্থা</th><th>অ্যাকশন</th></tr></thead>
         <tbody id="userBody"></tbody>
       </table>
     </div>
@@ -46,7 +46,7 @@
     async function loadProfiles() {
       hidePageError();
       try {
-        profilesCache = await SB.get('/profiles?select=id,name,email,phone,role,active&order=name.asc') || [];
+        profilesCache = await SB.get('/profiles?select=id,name,email,phone,batch,blood_group,photo_url,role,active&order=name.asc') || [];
       } catch (e) {
         showPageError();
         profilesCache = [];
@@ -61,9 +61,12 @@
         const isSelf = u.id === sess.userId;
         const tr = document.createElement('tr');
         tr.innerHTML =
-          '<td><strong>' + esc(u.name) + '</strong></td>' +
+          '<td><span style="display:inline-flex;align-items:center;gap:8px;">' +
+            (u.photo_url ? '<img src="' + esc(u.photo_url) + '" alt="" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">' : '<span style="width:38px;height:38px;border-radius:50%;background:#eceff1;display:inline-flex;align-items:center;justify-content:center;font-size:17px;">👤</span>') +
+            '<strong>' + esc(u.name) + '</strong></span></td>' +
           '<td>' + esc(u.email || '—') + '</td>' +
           '<td>' + esc(u.phone || '—') + '</td>' +
+          '<td>' + esc(u.batch || '—') + (u.blood_group ? ' · <strong>' + esc(grpDisplay(u.blood_group)) + '</strong>' : '') + '</td>' +
           '<td>' + (isSelf
             ? (u.role === 'admin' ? '<span class="badge red">অ্যাডমিন</span>' : '<span class="badge new">টিম</span>')
             : '<select data-role="' + u.id + '" style="padding:6px;border:1px solid #ccc;border-radius:6px;">' +
@@ -73,7 +76,7 @@
           '<td>' + (isSelf ? '— (আপনি)' : '<button class="btn small ' + (u.active ? 'gray' : 'green') + '" data-toggle="' + u.id + '">' + (u.active ? 'নিষ্ক্রিয় করুন' : 'সক্রিয় করুন') + '</button>') + '</td>';
         tb.appendChild(tr);
       });
-      if (!profilesCache.length) tb.innerHTML = '<tr><td colspan="6" class="note">কোনো প্রোফাইল পাওয়া যায়নি।</td></tr>';
+      if (!profilesCache.length) tb.innerHTML = '<tr><td colspan="7" class="note">কোনো প্রোফাইল পাওয়া যায়নি।</td></tr>';
     }
 
     document.querySelector('#userBody').addEventListener('click', async e => {
