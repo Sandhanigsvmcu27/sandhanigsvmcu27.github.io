@@ -48,7 +48,7 @@
   <div class="card" id="signupCard">
     <p class="note" style="margin-bottom:14px;">শুধুমাত্র <strong>সন্ধানী গণস্বাস্থ্য সমাজ ভিত্তিক মেডিকেল কলেজ ইউনিটের</strong> টিম সদস্যদের জন্য। ফর্ম জমা দিলেই ভিতরে ঢোকা যাবে না — <strong>Admin অনুমোদন</strong> দিলে এই ইমেইল ও পাসওয়ার্ড দিয়েই লগইন করতে পারবেন।</p>
     <div class="err" id="suErr" style="display:none;"></div>
-    <form class="f" id="signupForm">
+    <form class="f" id="signupForm" onsubmit="return false">
       <div>
         <label for="suName">পুরো নাম *</label>
         <input type="text" id="suName" required placeholder="যেমন: মোঃ উদাহরণ হোসেন" autocomplete="name">
@@ -82,7 +82,8 @@
         <img class="photo-prev" id="photoPrev" alt="ছবির প্রিভিউ">
         <p class="note">নিজের পরিষ্কার একটি ছবি দিন — Admin আপনাকে চিনতে সুবিধা হবে।</p>
       </div>
-      <button type="submit" id="suBtn">আবেদন জমা দিন →</button>
+      <button type="submit" id="suBtn" disabled>একটু অপেক্ষা করুন…</button>
+      <p class="note" id="suWait">পেজ পুরোপুরি তৈরি হলে বোতামটি চালু হবে।</p>
     </form>
     <p class="note" style="margin-top:14px;text-align:center;">আগেই অ্যাকাউন্ট আছে? <a href="login.html"><strong>লগইন করুন</strong></a></p>
   </div>
@@ -157,6 +158,10 @@
     };
     img.src = URL.createObjectURL(file);
   });
+
+  var suBtnInit = document.getElementById('suBtn');
+  suBtnInit.disabled = false; suBtnInit.textContent = 'আবেদন জমা দিন →';
+  var suWait = document.getElementById('suWait'); if (suWait) suWait.style.display = 'none';
 
   function showErr(msg) {
     var el = document.getElementById('suErr');

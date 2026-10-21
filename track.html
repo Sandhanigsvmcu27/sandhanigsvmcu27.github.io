@@ -43,7 +43,7 @@
 
   <div class="card" id="lookupCard">
     <p style="margin-bottom:14px;">অনুরোধ পাঠানোর পর সফল স্ক্রিনে যে <strong>SB-</strong> দিয়ে শুরু হওয়া ট্র্যাকিং নম্বরটি পেয়েছিলেন, সেটি এখানে লিখুন — টিমের উত্তর ও অনুরোধের অবস্থা দেখতে পারবেন। কোনো লগইন লাগবে না।</p>
-    <form class="f" id="lookupForm">
+    <form class="f" id="lookupForm" onsubmit="return false">
       <div>
         <label for="trackNo">ট্র্যাকিং নম্বর (যেমন: SB-1042)</label>
         <input type="text" id="trackNo" placeholder="SB-1042" required>
@@ -67,7 +67,7 @@
       <h4 style="margin-bottom:10px;">💬 মেসেজ থ্রেড</h4>
       <div class="msgs" id="tMsgs"></div>
       <div id="replyBox" style="margin-top:16px;">
-        <form class="f" id="replyForm">
+        <form class="f" id="replyForm" onsubmit="return false">
           <label for="replyText">টিমকে মেসেজ পাঠান</label>
           <textarea id="replyText" rows="2" placeholder="আপনার বার্তা..." required></textarea>
           <button type="submit">মেসেজ পাঠান →</button>

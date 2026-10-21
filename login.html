@@ -41,7 +41,7 @@
     <div id="pendingMsg" style="display:none;background:#fff8e1;border:1.5px solid #f9a825;color:#6d4c00;padding:12px 14px;border-radius:10px;font-size:15px;margin-bottom:14px;">✅ আপনার Google লগইন হয়েছে। এখন <strong>Admin-এর অনুমোদন</strong> বাকি আছে — অনুমোদন পেলে আবার লগইন করলেই ভিতরে ঢুকতে পারবেন।</div>
     <button type="button" id="googleBtn" style="width:100%;background:#fff;color:#333;border:1.5px solid #ccc;padding:12px 22px;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;">🔵 Google দিয়ে লগইন করুন</button>
     <p class="note" style="text-align:center;margin:12px 0;">— অথবা ইমেইল ও পাসওয়ার্ড দিয়ে —</p>
-    <form class="f" id="loginForm">
+    <form class="f" id="loginForm" onsubmit="return false">
       <div>
         <label for="email">ইমেইল</label>
         <input type="email" id="email" required placeholder="name@example.com" autocomplete="username">
