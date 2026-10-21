@@ -122,10 +122,10 @@
 <script src="js/config.js"></script>
 <script src="js/app.js"></script>
 <script>
-  var GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
+  var SU_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
   var pickedGroup = '';
   var chipsBox = document.getElementById('grpChips');
-  GROUPS.forEach(function (g) {
+  SU_GROUPS.forEach(function (g) {
     var b = document.createElement('button');
     b.type = 'button'; b.textContent = grpDisplay(g); b.setAttribute('data-g', g);
     b.addEventListener('click', function () {
