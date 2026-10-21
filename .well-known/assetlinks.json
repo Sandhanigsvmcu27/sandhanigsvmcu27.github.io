@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "io.github.sandhanigsvmcu27",
+      "sha256_cert_fingerprints": [
+        "E1:81:56:F0:74:76:BD:ED:2D:E7:BA:BF:C9:7F:AF:66:2B:1E:6C:7F:E5:F7:CF:4E:43:24:9B:7F:FA:CD:78:D7"
+      ]
+    }
+  }
+]
