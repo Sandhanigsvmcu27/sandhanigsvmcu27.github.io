@@ -101,15 +101,15 @@
         const near = bs.length ? bs[0].expiry_date : null;
         return { m, bs, tot, near };
       });
-      list = list.filter(x => x.tot > 0 || !q);
       if (q) list = list.filter(x => (x.m.generic_name + ' ' + x.m.brand_name + ' ' + x.m.strength).toLowerCase().indexOf(q) !== -1);
+      else list = list.filter(x => x.tot > 0);
       list.sort((a, b) => {
         if (!a.near && !b.near) return 0;
         if (!a.near) return 1; if (!b.near) return -1;
         return a.near < b.near ? -1 : 1;
       });
-      if (!list.length) { wrap.innerHTML = '<p class="note">কোনো ওষুধ পাওয়া যায়নি। নতুন ওষুধ হলে <a href="drug-receipt.html">প্রাপ্তি</a> পেজে তালিকাভুক্ত করুন।</p>'; return; }
-      wrap.innerHTML = '';
+      if (!list.length) { wrap.innerHTML = '<p class="note">' + (q ? 'কোনো ওষুধ পাওয়া যায়নি।' : 'বর্তমানে কোনো ওষুধ মজুত নেই — প্রাপ্তি এলে এখানে দেখা যাবে। পুরো তালিকা দেখতে উপরে নাম লিখে খুঁজুন।') + '</p>'; return; }
+      if (!q) wrap.innerHTML = '<p class="note" style="margin-bottom:8px;">মজুত আছে এমন ওষুধ দেখানো হচ্ছে। পুরো তালিকা থেকে খুঁজতে নাম লিখুন।</p>'; else wrap.innerHTML = '';
       list.forEach(x => {
         const m = x.m;
         const st = expState(x.near);

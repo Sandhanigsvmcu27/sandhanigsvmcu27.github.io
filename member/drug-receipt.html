@@ -13,8 +13,12 @@
 <style>
   .rc-sticky{position:sticky;bottom:0;background:#fff;border-top:2px solid #eee;padding:12px 4px;display:flex;justify-content:space-between;align-items:center;gap:10px;z-index:5}
   .rc-sugg{border:1px solid #ddd;border-radius:8px;background:#fff;max-height:260px;overflow:auto;margin-top:4px}
-  .rc-sugg div{padding:10px 12px;cursor:pointer;border-bottom:1px solid #f0f0f0;font-size:15px}
+  .rc-sugg div{padding:11px 12px;cursor:pointer;border-bottom:1px solid #f0f0f0;font-size:15px}
   .rc-sugg div:hover{background:#f6f9ff}
+  .rc-chip{display:inline-block;background:#e3f2fd;color:#0d47a1;border-radius:999px;padding:8px 14px;margin:0 6px 8px 0;cursor:pointer;font-size:14.5px;border:1px solid #bbdefb}
+  .rc-step{display:flex;align-items:stretch;gap:6px}
+  .rc-step button{width:44px;font-size:20px;padding:0}
+  .rc-step input{flex:1;text-align:center}
 </style>
 </head>
 <body>
@@ -27,42 +31,28 @@
 
     <div class="card">
       <form class="f" id="rcForm">
-        <div class="row">
-          <div><label for="rcDonor">দাতা / উপদেষ্টার নাম *</label><input id="rcDonor" required placeholder="যিনি ওষুধ দিলেন"></div>
-          <div><label for="rcDate">প্রাপ্তির তারিখ</label><input type="date" id="rcDate"></div>
-        </div>
-        <label for="rcNote">নোট (ঐচ্ছিক)</label>
-        <input id="rcNote" placeholder="যেমন: কার্টনসহ পেয়েছি">
-        <h3 style="margin:16px 0 8px;">ওষুধের লাইনসমূহ</h3>
+        <label for="rcDonor">দাতা / উপদেষ্টার নাম *</label>
+        <input id="rcDonor" list="donorList" required placeholder="নাম লিখুন — আগের দাতারা suggestion-এ আসবে" autocomplete="off">
+        <datalist id="donorList"></datalist>
+        <details style="margin:10px 0;">
+          <summary style="cursor:pointer;color:#1565c0;">তারিখ / নোট বদলাতে চাইলে</summary>
+          <div class="row" style="margin-top:8px;">
+            <div><label for="rcDate">প্রাপ্তির তারিখ</label><input type="date" id="rcDate"></div>
+            <div><label for="rcNote">নোট (ঐচ্ছিক)</label><input id="rcNote" placeholder="যেমন: কার্টনসহ পেয়েছি"></div>
+          </div>
+        </details>
+
+        <div id="rcQuick" style="margin-top:6px;"></div>
+
+        <h3 style="margin:14px 0 8px;">ওষুধসমূহ</h3>
         <div id="rcLines"></div>
         <button type="button" class="btn ghost" id="rcAddLine">➕ আরেকটি ওষুধ যোগ করুন</button>
         <div class="rc-sticky">
-          <span style="font-size:17px;">মোট: <strong id="rcTotal">৳0</strong></span>
-          <button type="submit" id="rcSave">প্রাপ্তি সেভ করুন →</button>
+          <span style="font-size:16.5px;"><strong id="rcCount">০</strong> টি ওষুধ · মোট <strong id="rcTotal">৳0</strong></span>
+          <button type="submit" id="rcSave">সেভ করুন →</button>
         </div>
       </form>
-      <p class="note">ওষুধের নাম লিখলেই তালিকা থেকে আসবে — select করলেই <strong>রেফারেন্স দাম (MedEx) নিজে থেকে বসে যাবে</strong>, চাইলে বদলাতে পারবেন। হিসাব "রেফারেন্স দামে হিসাবমূল্য" হিসেবে থাকবে।</p>
-    </div>
-
-    <div class="card" style="margin-top:20px;">
-      <h3 style="margin-bottom:6px;">➕ তালিকায় নেই এমন ওষুধ</h3>
-      <p class="note" style="margin-bottom:10px;">নতুন ওষুধ একবার এখানে যোগ করলেই পরের বার থেকে search-এ পাওয়া যাবে।</p>
-      <form class="f" id="nmForm">
-        <div class="row">
-          <div><label>Generic নাম *</label><input id="nmGen" placeholder="Paracetamol"></div>
-          <div><label>Brand নাম</label><input id="nmBrand" placeholder="Napa"></div>
-        </div>
-        <div class="row">
-          <div><label>শক্তি</label><input id="nmStr" placeholder="500 mg"></div>
-          <div><label>ফর্ম</label><select id="nmFormSel"><option value="tablet">ট্যাবলেট</option><option value="capsule">ক্যাপসুল</option><option value="syrup">সিরাপ/সাসপেনশন</option><option value="injection">ইনজেকশন</option><option value="cream">ক্রিম/জেল/মলম</option><option value="drops">ড্রপ</option><option value="other">অন্যান্য</option></select></div>
-        </div>
-        <div class="row">
-          <div><label>রেফারেন্স দাম/পিস (৳, থাকলে)</label><input type="number" id="nmPrice" min="0" step="any"></div>
-          <div><label style="display:flex;gap:8px;align-items:center;font-weight:400;margin-top:26px;"><input type="checkbox" id="nmRx" style="width:auto;"> ⚠️ প্রেসক্রিপশন লাগে (অ্যান্টিবায়োটিক/ইনজেকশন)</label></div>
-        </div>
-        <button type="submit" class="btn blue">ওষুধটি তালিকায় যোগ করুন</button>
-        <span class="note" id="nmMsg" style="margin-left:8px;"></span>
-      </form>
+      <p class="note">ওষুধের নাম লিখে তালিকা থেকে বাছলেই <strong>রেফারেন্স দাম (MedEx) নিজে থেকে বসে যাবে</strong>। তালিকায় না থাকলে <a href="drug-add.html">নতুন ওষুধ যোগ করুন</a>।</p>
     </div>
 
     <div class="card" style="margin-top:20px;">
@@ -81,129 +71,164 @@
     document.querySelector('.member-shell').insertAdjacentHTML('afterbegin', sidebarHTML('drug-receipt.html', sess));
 
     const FORM_BN = { tablet: 'ট্যাবলেট', capsule: 'ক্যাপসুল', syrup: 'সিরাপ', injection: 'ইনজেকশন', cream: 'ক্রিম/জেল', drops: 'ড্রপ', other: 'অন্যান্য' };
-    const BN_MON = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
-    let meds = [], lastPrice = {};
+    const BN_NUM = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    const toBn = n => String(n).replace(/\d/g, d => BN_NUM[d]);
+    let meds = [], lastPrice = {}, recentMedIds = [];
+    const medById = {};
     const linesEl = document.getElementById('rcLines');
     document.getElementById('rcDate').value = new Date().toISOString().slice(0, 10);
 
     function medLabel(m) { return (m.brand_name || m.generic_name) + ' — ' + m.generic_name + (m.strength ? ' · ' + m.strength : '') + ' · ' + (FORM_BN[m.form] || m.form); }
-    function yearOptions() {
-      const y = new Date().getFullYear();
-      let s = '<option value="">বছর</option>';
-      for (let i = y - 1; i <= y + 6; i++) s += '<option value="' + i + '"' + (i === y + 2 ? ' selected' : '') + '>' + i + '</option>';
-      return s;
-    }
-    function monthOptions() {
-      let s = '<option value="">মাস</option>';
-      BN_MON.forEach((n, i) => { s += '<option value="' + (i + 1) + '">' + n + '</option>'; });
-      return s;
+    function priceOf(m) { return m.ref_price != null ? Number(m.ref_price) : (lastPrice[m.id] != null ? Number(lastPrice[m.id]) : null); }
+
+    function pickMed(d, m) {
+      d.dataset.mid = m.id;
+      d.querySelector('.rc-search').value = medLabel(m);
+      d.querySelector('.rc-sugg').style.display = 'none';
+      const f = d.querySelector('.rc-fields'); f.style.display = '';
+      const p = priceOf(m);
+      const priceEl = d.querySelector('.rc-price');
+      if (p != null) { priceEl.value = p; d.querySelector('.rc-pdisp').textContent = '৳' + p.toLocaleString('en-IN'); d.querySelector('.rc-pwrap').style.display = 'none'; }
+      else { d.querySelector('.rc-pdisp').textContent = 'জানা নেই'; d.querySelector('.rc-pwrap').style.display = ''; priceEl.value = ''; }
+      d.querySelector('.rc-psrc').textContent = m.ref_price != null ? '(রেফারেন্স: ' + (m.ref_source || 'MedEx') + ')' : (lastPrice[m.id] != null ? '(আগের প্রাপ্তির দাম)' : '(প্যাকেটের MRP দেখে বসান)');
+      calcTotal();
+      d.querySelector('.rc-qty').focus();
     }
 
-    function addLine(prefill) {
+    function addLine(prefillMed) {
       const d = document.createElement('div');
       d.className = 'rc-line';
       d.style.cssText = 'border:1px solid #e0e0e0;border-radius:10px;padding:12px;margin-bottom:10px;';
-      d.dataset.mid = prefill && prefill.mid ? prefill.mid : '';
+      d.dataset.mid = '';
       d.innerHTML =
-        '<label>ওষুধ * <span class="note">(নাম লিখে তালিকা থেকে বাছুন)</span></label>' +
-        '<input class="rc-search" placeholder="যেমন: Napa বা Paracetamol..." autocomplete="off" value="' + (prefill ? esc(prefill.label || '') : '') + '">' +
+        '<input class="rc-search" placeholder="ওষুধের নাম লিখুন — যেমন Napa বা Paracetamol..." autocomplete="off">' +
         '<div class="rc-sugg" style="display:none;"></div>' +
-        '<div class="rc-picked note" style="margin-top:4px;">' + (prefill && prefill.hint ? esc(prefill.hint) : '') + '</div>' +
-        '<div class="row" style="margin-top:8px;"><div><label>পরিমাণ *</label><input type="number" class="rc-qty" min="1"></div>' +
-        '<div><label>দাম/পিস (৳) *</label><input type="number" class="rc-price" min="0" step="any" value="' + (prefill && prefill.price != null ? prefill.price : '') + '"></div></div>' +
-        '<div class="row"><div><label>মেয়াদ — মাস</label><select class="rc-expM">' + monthOptions() + '</select></div>' +
-        '<div><label>বছর</label><select class="rc-expY">' + yearOptions() + '</select></div></div>' +
-        '<div style="display:flex;gap:8px;margin-top:8px;"><button type="button" class="btn small ghost rc-copy">⧉ লাইন কপি</button>' +
-        '<button type="button" class="btn small ghost rc-del">✕ লাইন বাদ</button></div>';
+        '<div class="rc-fields" style="display:none;">' +
+        '<p style="margin:10px 0 6px;">দাম: <strong class="rc-pdisp">—</strong>/পিস <span class="rc-psrc note"></span> <button type="button" class="btn small ghost rc-ptoggle">দাম বদলান</button></p>' +
+        '<div class="rc-pwrap" style="display:none;"><input type="number" class="rc-price" min="0" step="any" placeholder="প্রতি পিসের দাম (৳)"></div>' +
+        '<div class="row"><div><label>পরিমাণ *</label><div class="rc-step"><button type="button" class="btn ghost rc-minus">−</button><input type="number" class="rc-qty" min="1" placeholder="কতগুলো"><button type="button" class="btn ghost rc-plus">+</button></div></div>' +
+        '<div><label>মেয়াদ (মাস-বছর)</label><input type="month" class="rc-exp"></div></div>' +
+        '<div style="display:flex;gap:8px;margin-top:8px;"><button type="button" class="btn small ghost rc-copy">⧉ কপি</button>' +
+        '<button type="button" class="btn small ghost rc-del">✕ বাদ</button></div></div>';
       linesEl.appendChild(d);
-      const search = d.querySelector('.rc-search'), sugg = d.querySelector('.rc-sugg'), picked = d.querySelector('.rc-picked');
+      const search = d.querySelector('.rc-search'), sugg = d.querySelector('.rc-sugg');
       search.addEventListener('input', () => {
         d.dataset.mid = '';
+        d.querySelector('.rc-fields').style.display = 'none';
         const q = search.value.trim().toLowerCase();
         if (q.length < 2) { sugg.style.display = 'none'; return; }
-        const hits = meds.filter(m => (m.generic_name + ' ' + m.brand_name + ' ' + m.strength).toLowerCase().indexOf(q) !== -1).slice(0, 8);
-        if (!hits.length) { sugg.innerHTML = '<div style="cursor:default;color:#777;">তালিকায় নেই — নিচের "তালিকায় নেই এমন ওষুধ" থেকে আগে যোগ করুন</div>'; sugg.style.display = ''; return; }
+        let hits = meds.filter(m => (m.generic_name + ' ' + m.brand_name + ' ' + m.strength).toLowerCase().indexOf(q) !== -1);
+        hits.sort((a, b) => {
+          const sa = ((a.brand_name || '').toLowerCase().startsWith(q) || a.generic_name.toLowerCase().startsWith(q)) ? 0 : 1;
+          const sb = ((b.brand_name || '').toLowerCase().startsWith(q) || b.generic_name.toLowerCase().startsWith(q)) ? 0 : 1;
+          if (sa !== sb) return sa - sb;
+          const ra = recentMedIds.indexOf(a.id) !== -1 ? 0 : 1, rb = recentMedIds.indexOf(b.id) !== -1 ? 0 : 1;
+          return ra - rb;
+        });
+        hits = hits.slice(0, 6);
+        if (!hits.length) { sugg.innerHTML = '<div style="cursor:default;color:#777;">তালিকায় নেই — <a href="drug-add.html">নতুন ওষুধ যোগ করুন</a></div>'; sugg.style.display = ''; return; }
         sugg.innerHTML = '';
         hits.forEach(m => {
+          const p = priceOf(m);
           const row = document.createElement('div');
-          row.innerHTML = esc(medLabel(m)) + (m.ref_price != null ? ' <strong style="color:#1565c0;">· ৳' + m.ref_price + '</strong>' : '');
-          row.addEventListener('click', () => {
-            d.dataset.mid = m.id;
-            search.value = medLabel(m);
-            sugg.style.display = 'none';
-            const priceEl = d.querySelector('.rc-price');
-            if (m.ref_price != null) { priceEl.value = m.ref_price; picked.textContent = 'রেফারেন্স দাম বসানো হয়েছে' + (m.ref_source ? ' (' + m.ref_source + ')' : '') + ' — চাইলে বদলাতে পারেন।'; }
-            else if (lastPrice[m.id] != null) { priceEl.value = lastPrice[m.id]; picked.textContent = 'আগের প্রাপ্তির দাম বসানো হয়েছে — চাইলে বদলাতে পারেন।'; }
-            else picked.textContent = 'দাম জানা নেই — প্যাকেটে ছাপা দাম (MRP) দেখে বসান।';
-            calcTotal();
-          });
+          row.innerHTML = esc(medLabel(m)) + (p != null ? ' <strong style="color:#1565c0;float:right;">৳' + p + '</strong>' : '');
+          row.addEventListener('click', () => pickMed(d, m));
           sugg.appendChild(row);
         });
         sugg.style.display = '';
       });
       search.addEventListener('blur', () => setTimeout(() => { sugg.style.display = 'none'; }, 200));
-      d.querySelector('.rc-del').addEventListener('click', () => { d.remove(); calcTotal(); });
-      d.querySelector('.rc-copy').addEventListener('click', () => {
-        const m = meds.find(x => x.id === d.dataset.mid);
-        addLine(m ? { mid: m.id, label: medLabel(m), price: d.querySelector('.rc-price').value, hint: 'কপি করা লাইন — শুধু মেয়াদ/পরিমাণ দেখে নিন।' } : null);
+      d.querySelector('.rc-ptoggle').addEventListener('click', () => {
+        const w = d.querySelector('.rc-pwrap');
+        w.style.display = w.style.display === 'none' ? '' : 'none';
+        if (w.style.display !== 'none') d.querySelector('.rc-price').focus();
       });
-      d.querySelectorAll('.rc-qty,.rc-price').forEach(el => el.addEventListener('input', calcTotal));
+      d.querySelector('.rc-price').addEventListener('input', e => {
+        const v = parseFloat(e.target.value);
+        d.querySelector('.rc-pdisp').textContent = isNaN(v) ? '—' : '৳' + v.toLocaleString('en-IN');
+        calcTotal();
+      });
+      const qty = d.querySelector('.rc-qty');
+      d.querySelector('.rc-minus').addEventListener('click', () => { qty.value = Math.max(1, (parseInt(qty.value, 10) || 1) - 1); calcTotal(); });
+      d.querySelector('.rc-plus').addEventListener('click', () => { qty.value = (parseInt(qty.value, 10) || 0) + 1; calcTotal(); });
+      qty.addEventListener('input', calcTotal);
+      d.querySelector('.rc-del').addEventListener('click', () => { d.remove(); calcTotal(); });
+      d.querySelector('.rc-copy').addEventListener('click', () => { const m = medById[d.dataset.mid]; if (m) { const nd = addLine(m); } });
+      if (prefillMed) pickMed(d, prefillMed);
+      return d;
     }
+
     function calcTotal() {
-      let t = 0;
+      let t = 0, n = 0;
       linesEl.querySelectorAll('.rc-line').forEach(d => {
+        if (!d.dataset.mid) return;
+        n++;
         const q = parseInt(d.querySelector('.rc-qty').value, 10) || 0;
         const p = parseFloat(d.querySelector('.rc-price').value) || 0;
         t += q * p;
       });
       document.getElementById('rcTotal').textContent = '৳' + t.toLocaleString('en-IN');
+      document.getElementById('rcCount').textContent = toBn(n);
     }
     document.getElementById('rcAddLine').addEventListener('click', () => addLine(null));
+
+    function renderQuick() {
+      const wrap = document.getElementById('rcQuick');
+      const seen = [];
+      recentMedIds.forEach(id => { const m = medById[id]; if (m && seen.indexOf(id) === -1) { seen.push(id); } });
+      if (!seen.length) { wrap.innerHTML = ''; return; }
+      wrap.innerHTML = '<p class="note" style="margin-bottom:6px;">আগে তোলা ওষুধ — চাপ দিলেই লাইন যোগ হবে:</p>';
+      seen.slice(0, 8).forEach(id => {
+        const m = medById[id];
+        const c = document.createElement('span');
+        c.className = 'rc-chip';
+        c.textContent = (m.brand_name || m.generic_name) + (m.strength ? ' ' + m.strength : '');
+        c.addEventListener('click', () => addLine(m));
+        wrap.appendChild(c);
+      });
+    }
 
     async function loadMeds() {
       try {
         meds = await SB.get('/medicines?select=*&order=brand_name.asc') || [];
+        meds.forEach(m => { medById[m.id] = m; });
         const bs = await SB.get('/drug_batches?select=medicine_id,unit_price,created_at&order=created_at.desc&limit=300') || [];
-        lastPrice = {};
-        bs.forEach(b => { if (lastPrice[b.medicine_id] == null) lastPrice[b.medicine_id] = b.unit_price; });
+        lastPrice = {}; recentMedIds = [];
+        bs.forEach(b => {
+          if (lastPrice[b.medicine_id] == null) lastPrice[b.medicine_id] = b.unit_price;
+          if (recentMedIds.indexOf(b.medicine_id) === -1) recentMedIds.push(b.medicine_id);
+        });
+        renderQuick();
       } catch (e) { meds = []; }
     }
-
-    document.getElementById('nmForm').addEventListener('submit', async e => {
-      e.preventDefault();
-      const gen = document.getElementById('nmGen').value.trim();
-      if (!gen) { alert('Generic নাম আবশ্যক।'); return; }
-      const priceV = parseFloat(document.getElementById('nmPrice').value);
+    async function loadDonors() {
       try {
-        await SB.insert('medicines', {
-          generic_name: gen, brand_name: document.getElementById('nmBrand').value.trim(),
-          strength: document.getElementById('nmStr').value.trim(), form: document.getElementById('nmFormSel').value,
-          rx_flag: document.getElementById('nmRx').checked || document.getElementById('nmFormSel').value === 'injection',
-          ref_price: isNaN(priceV) ? null : priceV, ref_source: isNaN(priceV) ? '' : 'টিমের দেওয়া', created_by: sess.name
-        });
-        document.getElementById('nmMsg').textContent = '✅ যোগ হয়েছে — এবার উপরের লাইনে search করে পাবেন।';
-        e.target.reset();
-        await loadMeds();
-      } catch (err) { document.getElementById('nmMsg').textContent = 'যোগ করা যায়নি, আবার চেষ্টা করুন।'; }
-    });
+        const rows = await SB.get('/drug_receipts?select=donor_name&order=created_at.desc&limit=100') || [];
+        const names = [...new Set(rows.map(r => r.donor_name).filter(Boolean))];
+        document.getElementById('donorList').innerHTML = names.map(n => '<option value="' + esc(n) + '">').join('');
+      } catch (e) { /* datalist ছাড়াই চলবে */ }
+    }
 
     document.getElementById('rcForm').addEventListener('submit', async e => {
       e.preventDefault();
       const donor = document.getElementById('rcDonor').value.trim();
       if (!donor) { alert('দাতার নাম লিখুন।'); return; }
       const lines = [];
-      let bad = false;
+      let bad = false, badPrice = null;
       linesEl.querySelectorAll('.rc-line').forEach(d => {
         const mid = d.dataset.mid;
+        if (!mid) { if (d.querySelector('.rc-search').value.trim()) bad = true; return; }
         const qty = parseInt(d.querySelector('.rc-qty').value, 10);
         const price = parseFloat(d.querySelector('.rc-price').value);
-        if (!mid || isNaN(qty) || qty < 1 || isNaN(price)) { bad = true; return; }
-        const mo = d.querySelector('.rc-expM').value, yr = d.querySelector('.rc-expY').value;
+        if (isNaN(qty) || qty < 1) { bad = true; return; }
+        if (isNaN(price)) { badPrice = d; return; }
+        const xm = d.querySelector('.rc-exp').value;
         let exp = null;
-        if (mo && yr) exp = yr + '-' + String(mo).padStart(2, '0') + '-' + new Date(+yr, +mo, 0).getDate();
+        if (xm) { const p = xm.split('-'); exp = p[0] + '-' + p[1] + '-' + new Date(+p[0], +p[1], 0).getDate(); }
         lines.push({ mid, qty, price, exp });
       });
-      if (bad || !lines.length) { alert('প্রতিটি লাইনে তালিকা থেকে ওষুধ বেছে পরিমাণ ও দাম দিন।'); return; }
+      if (badPrice) { badPrice.querySelector('.rc-pwrap').style.display = ''; badPrice.querySelector('.rc-price').focus(); alert('একটি ওষুধের দাম জানা নেই — দামটা বসিয়ে দিন (প্যাকেটের MRP দেখে)।'); return; }
+      if (bad || !lines.length) { alert('প্রতিটি লাইনে তালিকা থেকে ওষুধ বেছে পরিমাণ দিন।'); return; }
       const btn = document.getElementById('rcSave'); btn.disabled = true;
       try {
         const total = lines.reduce((s, l) => s + l.qty * l.price, 0);
@@ -225,7 +250,7 @@
         try { await SB.insert('drug_audit', { entity: 'receipt', entity_id: rid, action: 'add', details: lines.length + ' লাইন, মোট ৳' + total, reason: '', by_name: sess.name }); } catch (e2) {}
         const ok = document.getElementById('rcOk'); ok.style.display = 'block'; ok.scrollIntoView({ behavior: 'smooth' });
         document.getElementById('rcDonor').value = ''; document.getElementById('rcNote').value = '';
-        linesEl.innerHTML = ''; addLine(null); calcTotal(); loadMeds(); loadReceipts();
+        linesEl.innerHTML = ''; addLine(null); calcTotal(); loadMeds(); loadReceipts(); loadDonors();
       } catch (err) { showPageError('প্রাপ্তি সেভ করা যায়নি — আবার চেষ্টা করুন। কিছু লাইন ঢুকে গিয়ে থাকলে ড্যাশবোর্ডে দেখে নিন।'); }
       btn.disabled = false;
     });
@@ -239,6 +264,7 @@
       } catch (e) { wrap.innerHTML = '<p class="note">তালিকা আনা যায়নি।</p>'; }
     }
     await loadMeds();
+    loadDonors();
     addLine(null);
     loadReceipts();
   })();

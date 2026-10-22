@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>নতুন ওষুধ যোগ — ড্রাগ ব্যাংক</title>
+<link rel="stylesheet" href="../css/style.css">
+<meta name="theme-color" content="#d32f2f">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="../assets/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+</head>
+<body>
+
+<div class="member-shell">
+  <div class="member-main">
+    <h2 class="page">➕ নতুন ওষুধ তালিকায় যোগ করুন</h2>
+    <div class="err" id="pageErr" style="display:none;"></div>
+    <div class="okbox" id="nmOk" style="display:none;">✅ যোগ হয়েছে — এবার <a href="drug-receipt.html">প্রাপ্তি</a> পেজে search করে পাবেন।</div>
+
+    <div class="card">
+      <form class="f" id="nmForm">
+        <div class="row">
+          <div><label>Generic নাম *</label><input id="nmGen" placeholder="Paracetamol"></div>
+          <div><label>Brand নাম</label><input id="nmBrand" placeholder="Napa"></div>
+        </div>
+        <div class="row">
+          <div><label>শক্তি</label><input id="nmStr" placeholder="500 mg"></div>
+          <div><label>ফর্ম</label><select id="nmFormSel"><option value="tablet">ট্যাবলেট</option><option value="capsule">ক্যাপসুল</option><option value="syrup">সিরাপ/সাসপেনশন</option><option value="injection">ইনজেকশন</option><option value="cream">ক্রিম/জেল/মলম</option><option value="drops">ড্রপ</option><option value="other">অন্যান্য</option></select></div>
+        </div>
+        <div class="row">
+          <div><label>রেফারেন্স দাম/পিস (৳, জানা থাকলে)</label><input type="number" id="nmPrice" min="0" step="any"></div>
+          <div><label style="display:flex;gap:8px;align-items:center;font-weight:400;margin-top:26px;"><input type="checkbox" id="nmRx" style="width:auto;"> ⚠️ প্রেসক্রিপশন লাগে (অ্যান্টিবায়োটিক/ইনজেকশন)</label></div>
+        </div>
+        <button type="submit" class="btn blue">তালিকায় যোগ করুন</button>
+      </form>
+      <p class="note">একবার যোগ করলেই ওষুধটা স্থায়ীভাবে তালিকায় থাকবে — প্রাপ্তি/খোঁজায় সবাই পাবে। আগে থেকে আছে কিনা প্রাপ্তি পেজে search করে দেখে নিন (একই ওষুধ দুইবার যোগ করবেন না)।</p>
+    </div>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/app.js"></script>
+<script>
+  (async function init() {
+    const sess = await Auth.guard(false);
+    if (!sess) return;
+    document.querySelector('.member-shell').insertAdjacentHTML('afterbegin', sidebarHTML('drug-add.html', sess));
+    document.getElementById('nmForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const gen = document.getElementById('nmGen').value.trim();
+      if (!gen) { alert('Generic নাম আবশ্যক।'); return; }
+      const priceV = parseFloat(document.getElementById('nmPrice').value);
+      try {
+        await SB.insert('medicines', {
+          generic_name: gen, brand_name: document.getElementById('nmBrand').value.trim(),
+          strength: document.getElementById('nmStr').value.trim(), form: document.getElementById('nmFormSel').value,
+          rx_flag: document.getElementById('nmRx').checked || document.getElementById('nmFormSel').value === 'injection',
+          ref_price: isNaN(priceV) ? null : priceV, ref_source: isNaN(priceV) ? '' : 'টিমের দেওয়া', created_by: sess.name
+        });
+        document.getElementById('nmOk').style.display = 'block';
+        e.target.reset();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (err) { showPageError('যোগ করা যায়নি, আবার চেষ্টা করুন।'); }
+    });
+  })();
+</script>
+<script src="../js/pwa.js"></script>
+</body>
+</html>
