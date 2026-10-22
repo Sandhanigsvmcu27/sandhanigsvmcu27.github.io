@@ -466,6 +466,7 @@ function sidebarHTML(activePage, sess) {
     ['donors.html', '🩸 ডোনার ডিরেক্টরি'],
     ['inbox.html', '📥 ইনবক্স'],
     ['stock.html', '🧊 স্টক'],
+    ['drugs.html', '💊 ওষুধ'],
     ['exchange.html', '🔄 এক্সচেঞ্জ'],
     ['activity.html', '🖼️ কার্যক্রম যোগ'],
   ];
