@@ -461,19 +461,35 @@ function genTrackNo() {
 /* ---------- member UI helpers ---------- */
 function sidebarHTML(activePage, sess) {
   const roleBn = sess.role === 'admin' ? 'অ্যাডমিন' : 'টিম মেম্বার';
-  const links = [
-    ['dashboard.html', '📊 ড্যাশবোর্ড'],
-    ['donors.html', '🩸 ডোনার ডিরেক্টরি'],
-    ['inbox.html', '📥 ইনবক্স'],
-    ['stock.html', '🧊 স্টক'],
-    ['drugs.html', '💊 ওষুধ'],
-    ['exchange.html', '🔄 এক্সচেঞ্জ'],
-    ['activity.html', '🖼️ কার্যক্রম যোগ'],
+  // [key, href, label] — key দিয়ে active মেলানো হয় (inbox-এর দুই রূপের জন্য key আলাদা)
+  const groups = [
+    ['', [
+      ['dashboard.html', 'dashboard.html', '📊 ড্যাশবোর্ড'],
+      ['activity.html', 'activity.html', '🖼️ কার্যক্রম যোগ'],
+    ]],
+    ['🩸 Blood Manager', [
+      ['donors.html', 'donors.html', '🩸 ডোনার ডিরেক্টরি'],
+      ['inbox.html', 'inbox.html', '📥 ইনবক্স (অনুরোধ)'],
+      ['stock.html', 'stock.html', '🧊 রক্তের স্টক'],
+      ['exchange.html', 'exchange.html', '🔄 এক্সচেঞ্জ'],
+    ]],
+    ['💉 Vaccine Manager', [
+      ['vaccine.html', 'vaccine.html', '💉 টিকার স্টক'],
+      ['vaccine-interest', 'inbox.html?type=vaccine', '📩 টিকার আগ্রহ'],
+    ]],
+    ['💊 Drug Manager', [
+      ['drugs.html', 'drugs.html', '💊 ড্যাশবোর্ড ও খোঁজা'],
+      ['drug-receipt.html', 'drug-receipt.html', '📦 প্রাপ্তি (নতুন ওষুধ)'],
+      ['drug-expired.html', 'drug-expired.html', '⏰ মেয়াদোত্তীর্ণ'],
+    ]],
   ];
-  if (sess.role === 'admin') links.push(['users.html', '👥 ইউজার']);
+  if (sess.role === 'admin') groups.push(['', [['users.html', 'users.html', '👥 ইউজার']]]);
   let html = '<div class="sidebar"><div class="who"><strong>' + esc(sess.name) + '</strong>' + roleBn + '</div>';
-  links.forEach(([href, label]) => {
-    html += '<a href="' + href + '"' + (activePage === href ? ' class="active"' : '') + '>' + label + '</a>';
+  groups.forEach(([head, links]) => {
+    if (head) html += '<div class="side-h">' + head + '</div>';
+    links.forEach(([key, href, label]) => {
+      html += '<a href="' + href + '"' + (activePage === key ? ' class="active"' : '') + '>' + label + '</a>';
+    });
   });
   html += '<div class="sp"></div><a href="#" class="logout" onclick="Auth.logout();return false;">🚪 লগআউট</a></div>';
   return html;
