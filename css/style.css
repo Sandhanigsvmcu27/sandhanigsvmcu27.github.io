@@ -21,14 +21,18 @@ nav.main a.emergency{background:var(--red);color:#fff;padding:8px 16px;border-ra
 .nav-toggle{display:none;margin-left:auto;background:var(--blue);color:#fff;border:none;font-size:22px;line-height:1;padding:8px 14px;border-radius:8px;cursor:pointer}
 section{scroll-margin-top:110px}
 @media (max-width:860px){
-  .nav-toggle{display:block}
-  nav.main{display:none;width:100%;flex-direction:column;align-items:stretch;gap:0;margin-left:0}
-  nav.main.open{display:flex}
+  /* Slim one-row header (Premium pack, 2026-10-22) */
+  header.site{flex-wrap:nowrap;padding:8px 14px;gap:10px}
+  header.site img.logo{height:46px}
+  header.site .org{min-width:0}
+  header.site .org h1{font-size:17px;line-height:1.2}
+  header.site .org p{font-size:11px;line-height:1.3}
+  .nav-toggle{display:block;margin-left:auto;padding:7px 12px;font-size:19px;flex:none}
+  nav.main{display:none}
+  nav.main.open{display:flex;position:absolute;top:100%;left:0;right:0;background:#fff;flex-direction:column;align-items:stretch;gap:0;margin-left:0;padding:6px 16px 14px;box-shadow:0 14px 28px rgba(0,0,0,.14);border-bottom:3px solid var(--red);z-index:99}
   nav.main a{padding:12px 6px;border-top:1px solid #eee;font-size:16px}
   nav.main a.login,nav.main a.emergency{text-align:center;margin-top:8px;border-top:none}
-  header.site img.logo{height:56px}
-  header.site .org h1{font-size:19px}
-  header.site .org p{font-size:12px}
+  section{scroll-margin-top:84px}
 }
 
 .hero{background:#fff;border-bottom:1px solid #e6e9f0;text-align:center;padding:52px 20px 44px}
@@ -315,3 +319,20 @@ body.pub .svc-card a.more{font-weight:700;color:#c62828;text-decoration:none;mar
 /* ---- member sidebar groups (3 managers, 2026-10-22) ---- */
 .sidebar .side-h{margin:16px 10px 6px;font-size:12.5px;font-weight:800;letter-spacing:.4px;color:#90a4ae;text-transform:none}
 .sidebar .side-h:first-of-type{margin-top:6px}
+
+/* ===== Premium polish (2026-10-22, Miraz-approved pack) ===== */
+body.pub p{line-height:1.8}
+body.pub .card{border:1px solid #e3e7ee;border-radius:16px;box-shadow:0 2px 12px rgba(16,42,86,.06)}
+body.pub .hero{background:linear-gradient(180deg,#fff6f6 0%,#ffffff 82%)}
+/* loading skeleton shimmer */
+.skel{border-radius:8px;background:linear-gradient(90deg,#edf0f4 25%,#f8fafc 50%,#edf0f4 75%);background-size:200% 100%;animation:skelShimmer 1.15s linear infinite}
+@keyframes skelShimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+.skel-line{height:16px;margin:0 auto}
+.skel-grp{height:28px;width:54px;margin:0 auto 8px}
+/* scroll fade-in */
+.reveal{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .55s ease}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion: reduce){
+  .reveal{opacity:1;transform:none;transition:none}
+  .skel{animation:none}
+}
