@@ -293,10 +293,10 @@
       const byGroup = {};
       (rows || []).forEach(r => { byGroup[r.blood_group] = r; });
       let latest = null, latestBy = '';
+      grid.innerHTML = '';
       GROUPS.forEach(g => {
         const s = byGroup[g] || { bags: 0, updated_at: null, updated_by: '' };
         if (s.updated_at && (!latest || s.updated_at > latest)) { latest = s.updated_at; latestBy = s.updated_by || ''; }
-        grid.innerHTML = '';
         // পাবলিকে শুধু স্ট্যাটাস — সঠিক সংখ্যা কখনোই নয় (Admin-এর সিদ্ধান্ত, ২০২৬-১০-২০)
         const st = s.bags >= 1 ? { cls: 'ok', txt: '🟢 আছে' } : { cls: 'out', txt: '🔴 নেই' };
         const div = document.createElement('div');
