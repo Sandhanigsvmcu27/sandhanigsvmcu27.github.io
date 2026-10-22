@@ -291,3 +291,23 @@ body.pub .vax-info li{margin:4px 0}
 body.pub .vax-status{font-weight:800;font-size:17px;margin:2px 0 8px}
 body.pub .vax-status.ok{color:#2e7d32}
 body.pub .vax-status.out{color:#c62828}
+
+/* ---- homepage interface refresh (2026-10-22, mockup-inspired) ---- */
+body.pub .hero{background:linear-gradient(180deg,#fdf1f1 0%,#ffffff 92%)}
+body.pub .hero h2{font-size:clamp(28px,4.6vw,42px);line-height:1.3}
+body.pub .ht-blue{color:#0d47a1}
+body.pub .ht-red{color:#c62828}
+body.pub .tiles4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+body.pub .tile{background:#fff;border:1.5px solid #edf0f4;border-radius:16px;padding:18px 10px 14px;text-align:center;text-decoration:none;color:inherit;box-shadow:0 3px 10px rgba(13,71,161,.06);transition:transform .15s ease, box-shadow .15s ease}
+body.pub .tile:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(13,71,161,.12)}
+body.pub .tile .ic{font-size:30px;line-height:1}
+body.pub .tile strong{display:block;margin-top:8px;font-size:16.5px}
+body.pub .tile span{display:block;font-size:13px;color:#666;margin-top:2px}
+body.pub .svc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+body.pub .svc-card{background:#fff;border:1.5px solid #edf0f4;border-radius:18px;overflow:hidden;box-shadow:0 4px 14px rgba(13,71,161,.07);display:flex;flex-direction:column}
+body.pub .svc-card img{width:100%;height:180px;object-fit:cover;display:block}
+body.pub .svc-card .b{padding:16px 18px 18px;display:flex;flex-direction:column;flex:1}
+body.pub .svc-card h4{font-size:19px;margin-bottom:6px}
+body.pub .svc-card p{color:#555;font-size:14.5px;flex:1}
+body.pub .svc-card a.more{font-weight:700;color:#c62828;text-decoration:none;margin-top:10px}
+@media (max-width:640px){body.pub .tiles4{grid-template-columns:repeat(2,1fr)}body.pub .svc-card img{height:160px}}
