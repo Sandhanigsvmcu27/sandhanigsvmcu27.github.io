@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>প্রাপ্তি — ড্রাগ ব্যাংক</title>
+<link rel="stylesheet" href="../css/style.css">
+<meta name="theme-color" content="#d32f2f">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="../assets/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+</head>
+<body>
+
+<div class="member-shell">
+  <div class="member-main">
+    <h2 class="page">📦 প্রাপ্তি — নতুন ওষুধ তুলুন</h2>
+    <div class="err" id="pageErr" style="display:none;"></div>
+    <div class="okbox" id="rcOk" style="display:none;">✅ প্রাপ্তি সেভ হয়েছে — স্টকে যোগ হয়ে গেছে।</div>
+
+    <div class="card">
+      <form class="f" id="rcForm">
+        <div class="row">
+          <div><label for="rcDonor">দাতা / উপদেষ্টার নাম *</label><input id="rcDonor" required placeholder="যিনি ওষুধ দিলেন"></div>
+          <div><label for="rcDate">প্রাপ্তির তারিখ</label><input type="date" id="rcDate"></div>
+        </div>
+        <label for="rcNote">নোট (ঐচ্ছিক)</label>
+        <input id="rcNote" placeholder="যেমন: কার্টনসহ পেয়েছি">
+        <h3 style="margin:16px 0 8px;">ওষুধের লাইনসমূহ</h3>
+        <div id="rcLines"></div>
+        <button type="button" class="btn ghost" id="rcAddLine">➕ আরেকটি ওষুধ যোগ করুন</button>
+        <p style="margin:14px 0;font-size:17px;">মোট প্রাপ্তিমূল্য: <strong id="rcTotal">৳0</strong></p>
+        <button type="submit" id="rcSave">প্রাপ্তি সেভ করুন →</button>
+      </form>
+      <p class="note">নতুন ওষুধ হলে লাইনে "➕ নতুন ওষুধ" বেছে generic/brand/শক্তি লিখুন — পরের বার থেকে তালিকায় পাওয়া যাবে। দাম = প্রতি পিস/বোতলের হিসাবমূল্য (আবশ্যক)। মেয়াদ মাস-বছর হিসেবে বসান।</p>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <h3 style="margin-bottom:10px;">সাম্প্রতিক প্রাপ্তি</h3>
+      <div id="rcList"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/app.js"></script>
+<script>
+  (async function init() {
+    const sess = await Auth.guard(false);
+    if (!sess) return;
+    document.querySelector('.member-shell').insertAdjacentHTML('afterbegin', sidebarHTML('drug-receipt.html', sess));
+
+    const FORM_BN = { tablet: 'ট্যাবলেট', capsule: 'ক্যাপসুল', syrup: 'সিরাপ', injection: 'ইনজেকশন', cream: 'ক্রিম/মলম', drops: 'ড্রপ', other: 'অন্যান্য' };
+    let meds = [];
+    const linesEl = document.getElementById('rcLines');
+    document.getElementById('rcDate').value = new Date().toISOString().slice(0, 10);
+
+    function medOptions() {
+      return '<option value="">— ওষুধ বাছুন —</option>' + meds.map(m =>
+        '<option value="' + m.id + '">' + esc((m.brand_name || m.generic_name) + ' — ' + m.generic_name + (m.strength ? ' · ' + m.strength : '') + ' · ' + (FORM_BN[m.form] || m.form)) + '</option>').join('') +
+        '<option value="__new">➕ নতুন ওষুধ (তালিকায় নেই)</option>';
+    }
+    function addLine() {
+      const d = document.createElement('div');
+      d.className = 'rc-line';
+      d.style.cssText = 'border:1px solid #e0e0e0;border-radius:10px;padding:12px;margin-bottom:10px;';
+      d.innerHTML =
+        '<div class="row"><div><label>ওষুধ *</label><select class="rc-med">' + medOptions() + '</select></div>' +
+        '<div><label>ব্যাচ নং (ঐচ্ছিক)</label><input class="rc-batch" placeholder="ব্যাচ"></div></div>' +
+        '<div class="rc-new" style="display:none;">' +
+        '<div class="row"><div><label>Generic নাম *</label><input class="rc-gen" placeholder="Paracetamol"></div>' +
+        '<div><label>Brand নাম</label><input class="rc-brand" placeholder="Napa"></div></div>' +
+        '<div class="row"><div><label>শক্তি</label><input class="rc-str" placeholder="500 mg"></div>' +
+        '<div><label>ফর্ম</label><select class="rc-form"><option value="tablet">ট্যাবলেট</option><option value="capsule">ক্যাপসুল</option><option value="syrup">সিরাপ</option><option value="injection">ইনজেকশন</option><option value="cream">ক্রিম/মলম</option><option value="drops">ড্রপ</option><option value="other">অন্যান্য</option></select></div></div>' +
+        '<label style="display:flex;gap:8px;align-items:center;font-weight:400;"><input type="checkbox" class="rc-rx" style="width:auto;"> ⚠️ প্রেসক্রিপশন লাগে (অ্যান্টিবায়োটিক/ইনজেকশন জাতীয়)</label></div>' +
+        '<div class="row"><div><label>পরিমাণ *</label><input type="number" class="rc-qty" min="1" placeholder="200"></div>' +
+        '<div><label>দাম/পিস (৳) *</label><input type="number" class="rc-price" min="0" step="any" placeholder="2"></div>' +
+        '<div><label>মেয়াদ (মাস-বছর)</label><input type="month" class="rc-exp"></div></div>' +
+        '<button type="button" class="btn small ghost rc-del">✕ লাইন বাদ</button>';
+      linesEl.appendChild(d);
+      d.querySelector('.rc-med').addEventListener('change', e => {
+        d.querySelector('.rc-new').style.display = e.target.value === '__new' ? '' : 'none';
+      });
+      d.querySelector('.rc-del').addEventListener('click', () => { d.remove(); calcTotal(); });
+      d.querySelectorAll('.rc-qty,.rc-price').forEach(el => el.addEventListener('input', calcTotal));
+    }
+    function calcTotal() {
+      let t = 0;
+      linesEl.querySelectorAll('.rc-line').forEach(d => {
+        const q = parseInt(d.querySelector('.rc-qty').value, 10) || 0;
+        const p = parseFloat(d.querySelector('.rc-price').value) || 0;
+        t += q * p;
+      });
+      document.getElementById('rcTotal').textContent = '৳' + t.toLocaleString('en-IN');
+    }
+    document.getElementById('rcAddLine').addEventListener('click', addLine);
+
+    async function loadMeds() {
+      try { meds = await SB.get('/medicines?select=*&order=generic_name.asc') || []; } catch (e) { meds = []; }
+      linesEl.querySelectorAll('.rc-med').forEach(sel => { const v = sel.value; sel.innerHTML = medOptions(); sel.value = v; });
+    }
+
+    document.getElementById('rcForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const donor = document.getElementById('rcDonor').value.trim();
+      if (!donor) { alert('দাতার নাম লিখুন।'); return; }
+      const lines = [];
+      let bad = false;
+      linesEl.querySelectorAll('.rc-line').forEach(d => {
+        const sel = d.querySelector('.rc-med').value;
+        const qty = parseInt(d.querySelector('.rc-qty').value, 10);
+        const price = parseFloat(d.querySelector('.rc-price').value);
+        if (!sel || isNaN(qty) || qty < 1 || isNaN(price)) { bad = true; return; }
+        const xm = d.querySelector('.rc-exp').value;
+        let exp = null;
+        if (xm) { const p = xm.split('-'); exp = p[0] + '-' + p[1] + '-' + new Date(+p[0], +p[1], 0).getDate(); }
+        const line = { sel, qty, price, exp, batchNo: d.querySelector('.rc-batch').value.trim() };
+        if (sel === '__new') {
+          line.gen = d.querySelector('.rc-gen').value.trim();
+          if (!line.gen) { bad = true; return; }
+          line.brand = d.querySelector('.rc-brand').value.trim();
+          line.str = d.querySelector('.rc-str').value.trim();
+          line.form = d.querySelector('.rc-form').value;
+          line.rx = d.querySelector('.rc-rx').checked || line.form === 'injection';
+        }
+        lines.push(line);
+      });
+      if (bad || !lines.length) { alert('প্রতিটি লাইনে ওষুধ, পরিমাণ ও দাম ঠিকমতো দিন (নতুন ওষুধে generic নাম আবশ্যক)।'); return; }
+      const btn = document.getElementById('rcSave'); btn.disabled = true;
+      try {
+        const total = lines.reduce((s, l) => s + l.qty * l.price, 0);
+        const rc = await SB.insert('drug_receipts', {
+          donor_name: donor, received_on: document.getElementById('rcDate').value || undefined,
+          note: document.getElementById('rcNote').value.trim(), total_value: total, created_by: sess.name
+        });
+        const rid = rc && rc[0] && rc[0].id;
+        if (!rid) throw new Error('receipt');
+        for (const l of lines) {
+          let mid = l.sel;
+          if (l.sel === '__new') {
+            const nm = await SB.insert('medicines', { generic_name: l.gen, brand_name: l.brand, strength: l.str, form: l.form, rx_flag: !!l.rx, created_by: sess.name });
+            mid = nm && nm[0] && nm[0].id;
+            if (!mid) throw new Error('medicine');
+          }
+          const bt = await SB.insert('drug_batches', {
+            medicine_id: mid, batch_no: l.batchNo, expiry_date: l.exp, quantity: l.qty,
+            unit_price: l.price, receipt_id: rid, created_by: sess.name, updated_by: sess.name
+          });
+          const bid = bt && bt[0] && bt[0].id;
+          if (!bid) throw new Error('batch');
+          await SB.insert('drug_receipt_items', { receipt_id: rid, batch_id: bid, quantity: l.qty, unit_price: l.price });
+        }
+        try { await SB.insert('drug_audit', { entity: 'receipt', entity_id: rid, action: 'add', details: lines.length + ' লাইন, মোট ৳' + total, reason: '', by_name: sess.name }); } catch (e) {}
+        const ok = document.getElementById('rcOk'); ok.style.display = 'block'; ok.scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('rcDonor').value = ''; document.getElementById('rcNote').value = '';
+        linesEl.innerHTML = ''; addLine(); calcTotal(); loadMeds(); loadReceipts();
+      } catch (err) { showPageError('প্রাপ্তি সেভ করা যায়নি — আবার চেষ্টা করুন। কিছু লাইন ঢুকে গিয়ে থাকলে ড্যাশবোর্ডে দেখে নিন।'); }
+      btn.disabled = false;
+    });
+
+    async function loadReceipts() {
+      const wrap = document.getElementById('rcList');
+      try {
+        const rows = await SB.get('/drug_receipts?select=*&order=created_at.desc&limit=15') || [];
+        if (!rows.length) { wrap.innerHTML = '<p class="note">এখনো কোনো প্রাপ্তি নেই।</p>'; return; }
+        wrap.innerHTML = rows.map(r => '<div style="display:flex;gap:8px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid #eee;"><strong>' + esc(r.donor_name) + '</strong><span>' + fmtDateBn(r.received_on) + '</span><span style="margin-left:auto;"><strong>৳' + Number(r.total_value || 0).toLocaleString('en-IN') + '</strong></span><span style="color:#777;font-size:13px;">' + esc(r.created_by || '') + '</span></div>').join('');
+      } catch (e) { wrap.innerHTML = '<p class="note">তালিকা আনা যায়নি।</p>'; }
+    }
+    await loadMeds();
+    addLine();
+    loadReceipts();
+  })();
+</script>
+<script src="../js/pwa.js"></script>
+</body>
+</html>

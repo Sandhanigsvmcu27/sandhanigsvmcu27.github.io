@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>মেয়াদোত্তীর্ণ — ড্রাগ ব্যাংক</title>
+<link rel="stylesheet" href="../css/style.css">
+<meta name="theme-color" content="#d32f2f">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="../assets/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+</head>
+<body>
+
+<div class="member-shell">
+  <div class="member-main">
+    <h2 class="page">⏰ মেয়াদোত্তীর্ণ ও ঝুঁকিপূর্ণ ওষুধ</h2>
+    <div class="err" id="pageErr" style="display:none;"></div>
+
+    <div class="card" style="border-left:5px solid #d32f2f;">
+      <h3 style="margin-bottom:10px;">⛔ মেয়াদ শেষ হয়ে গেছে</h3>
+      <div id="xpList"></div>
+      <p class="note">মেয়াদ শেষ ওষুধ রোগীকে দেওয়া যাবে না — এগুলো নিরাপদে সরিয়ে ফেলুন/ধ্বংসের ব্যবস্থা করুন এবং ড্যাশবোর্ড থেকে সংশোধন করে পরিমাণ ০ করে দিন (কারণসহ)।</p>
+    </div>
+
+    <div class="card" style="margin-top:20px;border-left:5px solid #ef6c00;">
+      <h3 style="margin-bottom:10px;">🟠 আগামী ৬০ দিনে মেয়াদ শেষ হবে</h3>
+      <div id="rkList"></div>
+      <p class="note">এগুলো আগে বিতরণের চেষ্টা করুন — সার্চের ফলাফলেও এরাই সবার আগে আসে।</p>
+    </div>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/app.js"></script>
+<script>
+  (async function init() {
+    const sess = await Auth.guard(false);
+    if (!sess) return;
+    document.querySelector('.member-shell').insertAdjacentHTML('afterbegin', sidebarHTML('drug-expired.html', sess));
+
+    const FORM_BN = { tablet: 'ট্যাবলেট', capsule: 'ক্যাপসুল', syrup: 'সিরাপ', injection: 'ইনজেকশন', cream: 'ক্রিম/মলম', drops: 'ড্রপ', other: 'অন্যান্য' };
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const in60 = new Date(today); in60.setDate(in60.getDate() + 60);
+    const iso = d => d.toISOString().slice(0, 10);
+    function table(rows) {
+      if (!rows.length) return '<p class="note">এই তালিকায় কিছু নেই। 🎉</p>';
+      let tot = 0;
+      const trs = rows.map(b => {
+        const m = b._m || {};
+        tot += (b.quantity || 0) * Number(b.unit_price || 0);
+        return '<tr><td><strong>' + esc(m.brand_name || m.generic_name || '?') + '</strong> <span style="color:#555;">' + esc(m.generic_name || '') + (m.strength ? ' · ' + esc(m.strength) : '') + ' · ' + (FORM_BN[m.form] || '') + '</span></td><td>' + esc(b.batch_no || '—') + '</td><td>' + (b.expiry_date ? fmtDateBn(b.expiry_date) : 'অজানা') + '</td><td>' + b.quantity + '</td><td>৳' + ((b.quantity || 0) * Number(b.unit_price || 0)).toLocaleString('en-IN') + '</td></tr>';
+      }).join('');
+      return '<table class="t"><thead><tr><th>ওষুধ</th><th>ব্যাচ</th><th>মেয়াদ</th><th>পরিমাণ</th><th>মূল্য</th></tr></thead><tbody>' + trs + '</tbody></table><p style="margin-top:8px;">মোট মূল্য: <strong>৳' + tot.toLocaleString('en-IN') + '</strong></p>';
+    }
+    try {
+      const meds = await SB.get('/medicines?select=*') || [];
+      const byId = {}; meds.forEach(m => { byId[m.id] = m; });
+      const batches = await SB.get('/drug_batches?select=*&quantity=gt.0&expiry_date=not.is.null&order=expiry_date.asc') || [];
+      batches.forEach(b => { b._m = byId[b.medicine_id]; });
+      const expired = batches.filter(b => b.expiry_date < iso(today));
+      const risk = batches.filter(b => b.expiry_date >= iso(today) && b.expiry_date <= iso(in60));
+      document.getElementById('xpList').innerHTML = table(expired);
+      document.getElementById('rkList').innerHTML = table(risk);
+    } catch (e) {
+      showPageError();
+      document.getElementById('xpList').innerHTML = '<p class="note">তালিকা আনা যায়নি।</p>';
+      document.getElementById('rkList').innerHTML = '';
+    }
+  })();
+</script>
+<script src="../js/pwa.js"></script>
+</body>
+</html>

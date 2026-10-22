@@ -78,7 +78,9 @@
   (async function init() {
     const sess = await Auth.guard(false);
     if (!sess) return;
-    document.querySelector('.member-shell').insertAdjacentHTML('afterbegin', sidebarHTML('inbox.html', sess));
+    const vaxOnly = new URLSearchParams(location.search).get('type') === 'vaccine';
+    document.querySelector('.member-shell').insertAdjacentHTML('afterbegin', sidebarHTML(vaxOnly ? 'vaccine-interest' : 'inbox.html', sess));
+    if (vaxOnly) { const h = document.querySelector('h2.page'); if (h) h.textContent = '💉 টিকার আগ্রহ — ইনবক্স'; }
 
     let requestsCache = [];
     let lastMsgByReq = {};
@@ -105,6 +107,7 @@
 
     function renderList() {
       let list = requestsCache.slice();
+      if (vaxOnly) list = list.filter(r => r.blood_group === 'টিকা');
       if (fStatus.value) list = list.filter(r => r.status === fStatus.value);
       if (fTrack.value.trim()) list = list.filter(r => r.track_no.toLowerCase().indexOf(fTrack.value.trim().toLowerCase()) !== -1);
       const wrap = document.getElementById('reqList');
