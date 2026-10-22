@@ -78,7 +78,7 @@
     const linesEl = document.getElementById('rcLines');
     document.getElementById('rcDate').value = new Date().toISOString().slice(0, 10);
 
-    function medLabel(m) { return (m.brand_name || m.generic_name) + ' — ' + m.generic_name + (m.strength ? ' · ' + m.strength : '') + ' · ' + (FORM_BN[m.form] || m.form); }
+    function medLabel(m) { return m.generic_name + (m.brand_name ? ' — ' + m.brand_name : '') + (m.strength ? ' · ' + m.strength : '') + ' · ' + (FORM_BN[m.form] || m.form); }
     function priceOf(m) { return m.ref_price != null ? Number(m.ref_price) : (lastPrice[m.id] != null ? Number(lastPrice[m.id]) : null); }
 
     function pickMed(d, m) {
@@ -101,7 +101,7 @@
       d.style.cssText = 'border:1px solid #e0e0e0;border-radius:10px;padding:12px;margin-bottom:10px;';
       d.dataset.mid = '';
       d.innerHTML =
-        '<input class="rc-search" placeholder="ওষুধের নাম লিখুন — যেমন Napa বা Paracetamol..." autocomplete="off">' +
+        '<input class="rc-search" placeholder="Generic নাম লিখুন — যেমন Paracetamol বা Napa..." autocomplete="off">' +
         '<div class="rc-sugg" style="display:none;"></div>' +
         '<div class="rc-fields" style="display:none;">' +
         '<p style="margin:10px 0 6px;">দাম: <strong class="rc-pdisp">—</strong>/পিস <span class="rc-psrc note"></span> <button type="button" class="btn small ghost rc-ptoggle">দাম বদলান</button></p>' +
@@ -119,8 +119,9 @@
         if (q.length < 2) { sugg.style.display = 'none'; return; }
         let hits = meds.filter(m => (m.generic_name + ' ' + m.brand_name + ' ' + m.strength).toLowerCase().indexOf(q) !== -1);
         hits.sort((a, b) => {
-          const sa = ((a.brand_name || '').toLowerCase().startsWith(q) || a.generic_name.toLowerCase().startsWith(q)) ? 0 : 1;
-          const sb = ((b.brand_name || '').toLowerCase().startsWith(q) || b.generic_name.toLowerCase().startsWith(q)) ? 0 : 1;
+          // generic নামের মিল আগে (প্রাধান্য generic-কে), তারপর brand মিল, তারপর আগে-তোলা
+          const sa = a.generic_name.toLowerCase().startsWith(q) ? 0 : ((a.brand_name || '').toLowerCase().startsWith(q) ? 1 : 2);
+          const sb = b.generic_name.toLowerCase().startsWith(q) ? 0 : ((b.brand_name || '').toLowerCase().startsWith(q) ? 1 : 2);
           if (sa !== sb) return sa - sb;
           const ra = recentMedIds.indexOf(a.id) !== -1 ? 0 : 1, rb = recentMedIds.indexOf(b.id) !== -1 ? 0 : 1;
           return ra - rb;
@@ -182,7 +183,7 @@
         const m = medById[id];
         const c = document.createElement('span');
         c.className = 'rc-chip';
-        c.textContent = (m.brand_name || m.generic_name) + (m.strength ? ' ' + m.strength : '');
+        c.textContent = m.generic_name + (m.strength ? ' ' + m.strength : '') + (m.brand_name ? ' (' + m.brand_name + ')' : '');
         c.addEventListener('click', () => addLine(m));
         wrap.appendChild(c);
       });

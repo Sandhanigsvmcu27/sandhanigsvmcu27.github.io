@@ -50,7 +50,7 @@
       const trs = rows.map(b => {
         const m = b._m || {};
         tot += (b.quantity || 0) * Number(b.unit_price || 0);
-        return '<tr><td><strong>' + esc(m.brand_name || m.generic_name || '?') + '</strong> <span style="color:#555;">' + esc(m.generic_name || '') + (m.strength ? ' · ' + esc(m.strength) : '') + ' · ' + (FORM_BN[m.form] || '') + '</span></td><td>' + esc(b.batch_no || '—') + '</td><td>' + (b.expiry_date ? fmtDateBn(b.expiry_date) : 'অজানা') + '</td><td>' + b.quantity + '</td><td>৳' + ((b.quantity || 0) * Number(b.unit_price || 0)).toLocaleString('en-IN') + '</td></tr>';
+        return '<tr><td><strong>' + esc(m.generic_name || '?') + '</strong> <span style="color:#555;">' + (m.brand_name ? esc(m.brand_name) + ' · ' : '') + (m.strength ? esc(m.strength) + ' · ' : '') + (FORM_BN[m.form] || '') + '</span></td><td>' + esc(b.batch_no || '—') + '</td><td>' + (b.expiry_date ? fmtDateBn(b.expiry_date) : 'অজানা') + '</td><td>' + b.quantity + '</td><td>৳' + ((b.quantity || 0) * Number(b.unit_price || 0)).toLocaleString('en-IN') + '</td></tr>';
       }).join('');
       return '<table class="t"><thead><tr><th>ওষুধ</th><th>ব্যাচ</th><th>মেয়াদ</th><th>পরিমাণ</th><th>মূল্য</th></tr></thead><tbody>' + trs + '</tbody></table><p style="margin-top:8px;">মোট মূল্য: <strong>৳' + tot.toLocaleString('en-IN') + '</strong></p>';
     }

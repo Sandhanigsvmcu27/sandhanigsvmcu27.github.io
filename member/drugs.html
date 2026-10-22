@@ -127,8 +127,8 @@
             'কারণ <input type="text" id="dgr_' + b.id + '" placeholder="কেন বদলাচ্ছেন" style="width:150px;padding:6px;"> ' +
             '<button class="btn small" data-save="' + b.id + '">সেভ</button></td></tr>';
         }).join('');
-        div.innerHTML = '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><strong style="font-size:17px;">' + esc(m.brand_name || m.generic_name) + '</strong>' +
-          '<span>' + esc(m.generic_name) + (m.strength ? ' · ' + esc(m.strength) : '') + ' · ' + (FORM_BN[m.form] || m.form) + '</span>' +
+        div.innerHTML = '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><strong style="font-size:17px;">' + esc(m.generic_name) + '</strong>' +
+          '<span>' + (m.brand_name ? esc(m.brand_name) + ' · ' : '') + (m.strength ? esc(m.strength) + ' · ' : '') + (FORM_BN[m.form] || m.form) + '</span>' +
           (m.rx_flag ? '<span class="badge" style="background:#fff3e0;color:#e65100;">⚠️ প্রেসক্রিপশন</span>' : '') +
           '<span style="margin-left:auto;"><strong>মজুত: ' + x.tot + '</strong> · কাছের মেয়াদ: ' + (x.near ? fmtDateBn(x.near) : '—') + ' ' + st.label + '</span></div>' +
           (x.bs.length ? '<table class="t" style="margin-top:10px;"><thead><tr><th>ব্যাচ</th><th>মেয়াদ</th><th>পরিমাণ</th><th>দাম/পিস</th><th>মূল্য</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>' : '<p class="note" style="margin-top:8px;">বর্তমানে মজুত নেই।</p>');
