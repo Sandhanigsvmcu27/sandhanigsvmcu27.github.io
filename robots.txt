@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /member/
+
+Sitemap: https://sandhanigsvmcu27.github.io/sitemap.xml
