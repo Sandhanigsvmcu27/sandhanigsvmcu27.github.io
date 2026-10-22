@@ -480,6 +480,7 @@ function sidebarHTML(activePage, sess) {
     ['💊 Drug Manager', [
       ['drugs.html', 'drugs.html', '💊 ড্যাশবোর্ড ও খোঁজা'],
       ['drug-receipt.html', 'drug-receipt.html', '📦 প্রাপ্তি (নতুন ওষুধ)'],
+      ['drug-add.html', 'drug-add.html', '➕ নতুন ওষুধ যোগ'],
       ['drug-expired.html', 'drug-expired.html', '⏰ মেয়াদোত্তীর্ণ'],
     ]],
   ];
