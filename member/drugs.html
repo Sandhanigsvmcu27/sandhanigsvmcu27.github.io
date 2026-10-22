@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ওষুধের তালিকা — সন্ধানী মেম্বার এরিয়া</title>
+<link rel="stylesheet" href="../css/style.css">
+<meta name="theme-color" content="#d32f2f">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="../assets/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+</head>
+<body>
+
+<div class="member-shell">
+  <div class="member-main">
+    <h2 class="page">💊 ওষুধের তালিকা (ড্রাগ ব্যাংক)</h2>
+    <div class="err" id="pageErr" style="display:none;"></div>
+    <div class="okbox" id="savedMsg" style="display:none;">✅ সংরক্ষিত হয়েছে।</div>
+
+    <div class="card">
+      <p style="margin-bottom:12px;">উপদেষ্টাদের দেওয়া ওষুধের তালিকা — অফিসে নতুন ওষুধ এলে বা বিতরণ হলে এখানে আপডেট করুন। <strong>এই তালিকা শুধু টিমের জন্য</strong> — পাবলিকে ওষুধের নাম দেখানো হয় না; রোগীদের জন্য হোমপেজে কল করার ব্যবস্থা আছে।</p>
+      <form class="f" id="addForm">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+          <div style="flex:2;min-width:180px;"><label for="dName">ওষুধের নাম *</label><input type="text" id="dName" required placeholder="যেমন: Paracetamol 500mg"></div>
+          <div style="flex:1;min-width:100px;"><label for="dQty">পরিমাণ</label><input type="number" id="dQty" min="0" value="0" inputmode="numeric"></div>
+          <div style="flex:1;min-width:110px;"><label for="dUnit">একক</label><input type="text" id="dUnit" placeholder="পিস / বক্স / বোতল"></div>
+          <div style="flex:2;min-width:160px;"><label for="dNote">নোট</label><input type="text" id="dNote" placeholder="কার জন্য / কোন উপদেষ্টা দিলেন"></div>
+          <button type="submit" class="btn green">➕ যোগ করুন</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+        <h3 style="flex:1;">বর্তমান তালিকা</h3>
+        <input type="search" id="dSearch" placeholder="🔍 নাম দিয়ে খুঁজুন" style="padding:9px;border:1px solid #ccc;border-radius:8px;min-width:200px;">
+      </div>
+      <form class="f" id="editForm">
+        <table class="t">
+          <thead><tr><th>ওষুধের নাম</th><th>পরিমাণ</th><th>একক</th><th>নোট</th><th>সর্বশেষ আপডেট</th><th></th></tr></thead>
+          <tbody id="drugBody"></tbody>
+        </table>
+        <p class="note" id="emptyMsg" style="display:none;">এখনো কোনো ওষুধ যোগ করা হয়নি — উপরের ফর্মে প্রথম ওষুধটি যোগ করুন।</p>
+        <button type="submit" style="margin-top:14px;">পরিবর্তন সেভ করুন →</button>
+      </form>
+      <p class="note">পরিমাণ ০ হয়ে গেলে ওষুধটি শেষ — তালিকায় রেখে পরিমাণ ০ করুন, অথবা ভুল এন্ট্রি হলে 🗑 দিয়ে মুছে দিন। কে কখন আপডেট করল তার রেকর্ড থাকে।</p>
+    </div>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/app.js"></script>
+<script>
+  (async function init() {
+    const sess = await Auth.guard(false);
+    if (!sess) return;
+    document.querySelector('.member-shell').insertAdjacentHTML('afterbegin', sidebarHTML('drugs.html', sess));
+    const tb = document.getElementById('drugBody');
+    let loaded = {}; // id -> row
+
+    function rowHTML(d) {
+      return '<td><strong>' + esc(d.name) + '</strong></td>' +
+        '<td><input type="number" min="0" max="99999" value="' + (d.quantity || 0) + '" id="dq_' + d.id + '" style="padding:8px;border:1px solid #ccc;border-radius:6px;width:100px;"></td>' +
+        '<td><input type="text" value="' + esc(d.unit || '') + '" id="du_' + d.id + '" style="padding:8px;border:1px solid #ccc;border-radius:6px;width:100px;"></td>' +
+        '<td><input type="text" value="' + esc(d.note || '') + '" id="dn_' + d.id + '" style="padding:8px;border:1px solid #ccc;border-radius:6px;width:150px;"></td>' +
+        '<td style="font-size:13px;color:#555;">' + (d.updated_at ? fmtDateBn(d.updated_at) + (d.updated_by ? ' — ' + esc(d.updated_by) : '') : '—') + '</td>' +
+        '<td><button type="button" class="btn small" data-del="' + d.id + '" title="মুছে দিন">🗑</button></td>';
+    }
+
+    function render() {
+      const q = (document.getElementById('dSearch').value || '').trim().toLowerCase();
+      tb.innerHTML = '';
+      let shown = 0;
+      Object.values(loaded).forEach(d => {
+        if (q && d.name.toLowerCase().indexOf(q) === -1) return;
+        const tr = document.createElement('tr');
+        tr.innerHTML = rowHTML(d);
+        tb.appendChild(tr);
+        shown++;
+      });
+      document.getElementById('emptyMsg').style.display = Object.keys(loaded).length ? 'none' : 'block';
+      tb.querySelectorAll('[data-del]').forEach(btn => {
+        btn.addEventListener('click', async function () {
+          const id = btn.getAttribute('data-del');
+          const d = loaded[id];
+          if (!confirm('"' + (d ? d.name : '') + '" তালিকা থেকে মুছে যাবে — নিশ্চিত?')) return;
+          try {
+            await sbRequest('/rest/v1/drugs?id=eq.' + encodeURIComponent(id), { method: 'DELETE', prefer: 'return=minimal' });
+            delete loaded[id];
+            render();
+            const m = document.getElementById('savedMsg');
+            m.textContent = '🗑 মুছে ফেলা হয়েছে।'; m.style.display = 'block';
+          } catch (e) { showPageError('মুছতে সমস্যা হয়েছে, আবার চেষ্টা করুন।'); }
+        });
+      });
+    }
+
+    async function loadDrugs() {
+      hidePageError();
+      try {
+        const rows = await SB.get('/drugs?select=id,name,quantity,unit,note,updated_by,updated_at&order=name.asc') || [];
+        loaded = {};
+        rows.forEach(r => { loaded[r.id] = r; });
+      } catch (e) {
+        showPageError();
+        loaded = {};
+      }
+      render();
+    }
+
+    document.getElementById('dSearch').addEventListener('input', render);
+
+    document.getElementById('addForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const name = document.getElementById('dName').value.trim();
+      if (!name) return;
+      let qty = parseInt(document.getElementById('dQty').value, 10);
+      if (isNaN(qty) || qty < 0) qty = 0;
+      try {
+        await SB.insert('drugs', {
+          name: name, quantity: qty,
+          unit: document.getElementById('dUnit').value.trim(),
+          note: document.getElementById('dNote').value.trim(),
+          updated_by: sess.name, updated_at: new Date().toISOString()
+        });
+        e.target.reset();
+        document.getElementById('dQty').value = 0;
+        await loadDrugs();
+        const m = document.getElementById('savedMsg');
+        m.textContent = '✅ "' + name + '" যোগ হয়েছে।'; m.style.display = 'block';
+        m.scrollIntoView({ behavior: 'smooth' });
+      } catch (err) { showPageError('যোগ করা যায়নি, আবার চেষ্টা করুন।'); }
+    });
+
+    document.getElementById('editForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      try {
+        for (const id of Object.keys(loaded)) {
+          const qEl = document.getElementById('dq_' + id);
+          if (!qEl) continue; // search filter-এ লুকানো row — ছোঁব না
+          let qty = parseInt(qEl.value, 10);
+          if (isNaN(qty) || qty < 0) qty = 0;
+          const unit = document.getElementById('du_' + id).value.trim();
+          const note = document.getElementById('dn_' + id).value.trim();
+          const d = loaded[id];
+          if (d.quantity === qty && (d.unit || '') === unit && (d.note || '') === note) continue;
+          await SB.update('/drugs?id=eq.' + encodeURIComponent(id), {
+            quantity: qty, unit: unit, note: note,
+            updated_by: sess.name, updated_at: new Date().toISOString()
+          });
+        }
+        await loadDrugs();
+        const m = document.getElementById('savedMsg');
+        m.textContent = '✅ সংরক্ষিত হয়েছে।'; m.style.display = 'block';
+        m.scrollIntoView({ behavior: 'smooth' });
+      } catch (err) { showPageError('সেভ করা যায়নি, আবার চেষ্টা করুন।'); }
+    });
+
+    loadDrugs();
+  })();
+</script>
+<script src="../js/pwa.js"></script>
+</body>
+</html>
