@@ -129,9 +129,14 @@ table.t th{background:#f0f4f8;color:#333}
 
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media(max-width:760px){
-  .sidebar{width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;padding:10px}
-  .sidebar .who{display:none}.sidebar .sp{display:none}
+  /* মোবাইলে sidebar = slim topbar + ভাঁজ করা মেনু (Premium member UI, 2026-10-23) */
   .member-shell{flex-direction:column}
+  .sidebar{width:100%;padding:0;gap:0}
+  .sidebar .who{display:none}.sidebar .sp{display:none}
+  .side-topbar{display:flex;align-items:center;gap:10px;width:100%;padding:12px 16px}
+  .side-nav{display:none;width:100%;flex-direction:column;gap:2px;padding:4px 12px 14px;max-height:72vh;overflow:auto}
+  .sidebar.open .side-nav{display:flex}
+  .sidebar a{padding:11px 12px}
   .grid2{grid-template-columns:1fr}
   .hero h2{font-size:23px}
   .btn-emergency{font-size:17px;padding:13px 30px}
@@ -336,3 +341,14 @@ body.pub .hero{background:linear-gradient(180deg,#fff6f6 0%,#ffffff 82%)}
   .reveal{opacity:1;transform:none;transition:none}
   .skel{animation:none}
 }
+
+/* ===== Member UI polish (2026-10-23) ===== */
+.st-brand{font-weight:800;color:#fff;font-size:16.5px}
+.st-brand span{color:#90caf9}
+.side-toggle{margin-left:auto;background:rgba(255,255,255,.14);color:#fff;border:none;font-size:20px;line-height:1;padding:8px 13px;border-radius:9px;cursor:pointer}
+@media(min-width:761px){
+  .side-topbar{display:none}
+  .side-nav{display:flex;flex-direction:column;gap:4px}
+}
+.sidebar a.active{box-shadow:inset 3px 0 0 var(--red)}
+.member-main .card{border:1px solid #e3e7ee;border-radius:16px;box-shadow:0 2px 12px rgba(16,42,86,.06)}
