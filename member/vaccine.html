@@ -10,6 +10,19 @@
 <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+<style>
+  .vax-card{border:1px solid #e3e7ee;border-radius:16px;padding:18px;margin-bottom:14px;background:#fff;box-shadow:0 2px 10px rgba(16,42,86,.05)}
+  .vax-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .vax-name{font-size:19px;font-weight:800}
+  .vax-pill{margin-left:auto;font-weight:700;font-size:14.5px;padding:5px 14px;border-radius:999px}
+  .vax-pill.ok{background:#e8f5e9;color:#1b5e20}
+  .vax-pill.out{background:#ffebee;color:#b71c1c}
+  .vax-step{display:flex;align-items:stretch;gap:8px;max-width:320px}
+  .vax-step button{width:52px;font-size:22px;padding:0}
+  .vax-step input{flex:1;text-align:center;font-size:21px;font-weight:700;padding:10px}
+  .vax-meta{margin-top:12px;font-size:13.5px;color:#666}
+  .vax-savebar{position:sticky;bottom:0;background:#fff;border-top:2px solid #eee;padding:12px 4px;text-align:right}
+</style>
 </head>
 <body>
 
@@ -21,11 +34,8 @@
 
     <div class="card">
       <form class="f" id="vaxForm">
-        <table class="t">
-          <thead><tr><th>টিকা</th><th>ডোজ সংখ্যা</th><th>সর্বশেষ আপডেট</th></tr></thead>
-          <tbody id="vaxBody"></tbody>
-        </table>
-        <button type="submit" style="margin-top:14px;">টিকার স্টক সেভ করুন →</button>
+        <div id="vaxCards"></div>
+        <div class="vax-savebar"><button type="submit">টিকার স্টক সেভ করুন →</button></div>
       </form>
       <p class="note">সংখ্যা শুধু মেম্বারদের জন্য — পাবলিকে শুধু স্ট্যাটাস দেখায়: <strong>১+ ডোজ = 🟢 পাওয়া যাচ্ছে, ০ = 🔴 নেই</strong>। কে কখন আপডেট করল তার রেকর্ড থাকবে। টিকার আগ্রহের ফর্মের জমা পড়া অনুরোধ দেখুন <a href="inbox.html?type=vaccine">টিকার আগ্রহ</a> পেজে।</p>
     </div>
@@ -39,8 +49,13 @@
     const sess = await Auth.guard(false);
     if (!sess) return;
     document.querySelector('.member-shell').insertAdjacentHTML('afterbegin', sidebarHTML('vaccine.html', sess));
-    const vtb = document.getElementById('vaxBody');
+    const vtb = document.getElementById('vaxCards');
     let vloaded = {};
+    function pillHTML(doses) {
+      return doses >= 1
+        ? '<span class="vax-pill ok">🟢 পাওয়া যাচ্ছে</span>'
+        : '<span class="vax-pill out">🔴 নেই</span>';
+    }
     async function loadVax() {
       hidePageError();
       try {
@@ -50,12 +65,24 @@
       } catch (e) { showPageError(); vloaded = {}; }
       vtb.innerHTML = '';
       Object.values(vloaded).forEach(v => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = '<td><strong>' + esc(v.name) + '</strong></td>' +
-          '<td><input type="number" min="0" max="9999" value="' + (v.doses || 0) + '" id="vx_' + v.id + '" style="padding:8px;border:1px solid #ccc;border-radius:6px;width:110px;"></td>' +
-          '<td style="font-size:13px;color:#555;">' + (v.updated_at ? fmtDateBn(v.updated_at) + (v.updated_by ? ' — ' + esc(v.updated_by) : '') : '—') + '</td>';
-        vtb.appendChild(tr);
+        const card = document.createElement('div');
+        card.className = 'vax-card';
+        card.innerHTML =
+          '<div class="vax-head"><span class="vax-name">💉 ' + esc(v.name) + '</span><span class="vax-pillwrap">' + pillHTML(v.doses || 0) + '</span></div>' +
+          '<label style="font-weight:600;">ডোজ সংখ্যা</label>' +
+          '<div class="vax-step"><button type="button" class="btn ghost vax-minus">−</button>' +
+          '<input type="number" min="0" max="9999" value="' + (v.doses || 0) + '" id="vx_' + v.id + '">' +
+          '<button type="button" class="btn ghost vax-plus">+</button></div>' +
+          '<p class="vax-meta">সর্বশেষ আপডেট: ' + (v.updated_at ? fmtDateBn(v.updated_at) + (v.updated_by ? ' — ' + esc(v.updated_by) : '') : '—') + '</p>';
+        const input = card.querySelector('input');
+        const pillWrap = card.querySelector('.vax-pillwrap');
+        const sync = () => { const n = parseInt(input.value, 10); pillWrap.innerHTML = pillHTML(isNaN(n) ? 0 : n); };
+        input.addEventListener('input', sync);
+        card.querySelector('.vax-minus').addEventListener('click', () => { input.value = Math.max(0, (parseInt(input.value, 10) || 0) - 1); sync(); });
+        card.querySelector('.vax-plus').addEventListener('click', () => { input.value = (parseInt(input.value, 10) || 0) + 1; sync(); });
+        vtb.appendChild(card);
       });
+      if (!Object.keys(vloaded).length) vtb.innerHTML = '<p class="note">কোনো টিকার তথ্য পাওয়া যায়নি।</p>';
     }
     document.getElementById('vaxForm').addEventListener('submit', async e => {
       e.preventDefault();
