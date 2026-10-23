@@ -485,15 +485,24 @@ function sidebarHTML(activePage, sess) {
     ]],
   ];
   if (sess.role === 'admin') groups.push(['', [['users.html', 'users.html', '👥 ইউজার']]]);
-  let html = '<div class="sidebar"><div class="who"><strong>' + esc(sess.name) + '</strong>' + roleBn + '</div>';
+  let html = '<div class="sidebar"><div class="side-topbar"><span class="st-brand">🩸 Sandhani <span>GSVMC Unit</span></span><button type="button" class="side-toggle" id="sideToggle" aria-label="মেনু">☰</button></div>' +
+    '<div class="who"><strong>' + esc(sess.name) + '</strong>' + roleBn + '</div><nav class="side-nav">';
   groups.forEach(([head, links]) => {
     if (head) html += '<div class="side-h">' + head + '</div>';
     links.forEach(([key, href, label]) => {
       html += '<a href="' + href + '"' + (activePage === key ? ' class="active"' : '') + '>' + label + '</a>';
     });
   });
-  html += '<div class="sp"></div><a href="#" class="logout" onclick="Auth.logout();return false;">🚪 লগআউট</a></div>';
+  html += '<div class="sp"></div><a href="#" class="logout" onclick="Auth.logout();return false;">🚪 লগআউট</a></nav></div>';
   return html;
 }
+
+// মোবাইলে sidebar topbar-এর ☰ টগল (সব member পেজে একবারই বাঁধা)
+document.addEventListener('click', function (e) {
+  const t = e.target && e.target.closest ? e.target.closest('#sideToggle') : null;
+  if (!t) return;
+  const sb = t.closest('.sidebar');
+  if (sb) { sb.classList.toggle('open'); t.textContent = sb.classList.contains('open') ? '✕' : '☰'; }
+});
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function statusBadge(st) { return '<span class="badge ' + (STATUS_CLASS[st] || 'gray') + '">' + (STATUS_BN[st] || st) + '</span>'; }
