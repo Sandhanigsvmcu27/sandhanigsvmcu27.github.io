@@ -132,7 +132,8 @@ table.t th{background:#f0f4f8;color:#333}
   /* মোবাইলে sidebar = slim topbar + ভাঁজ করা মেনু (Premium member UI, 2026-10-23) */
   .member-shell{flex-direction:column}
   .sidebar{width:100%;padding:0;gap:0}
-  .sidebar .who{display:none}.sidebar .sp{display:none}
+  .sidebar .who{padding:2px 16px 8px}
+  .sidebar .sp{display:none}
   .side-topbar{display:flex;align-items:center;gap:10px;width:100%;padding:12px 16px}
   .side-nav{display:none;width:100%;flex-direction:column;gap:2px;padding:4px 12px 14px;max-height:72vh;overflow:auto}
   .sidebar.open .side-nav{display:flex}
@@ -352,3 +353,33 @@ body.pub .hero{background:linear-gradient(180deg,#fff6f6 0%,#ffffff 82%)}
 }
 .sidebar a.active{box-shadow:inset 3px 0 0 var(--red)}
 .member-main .card{border:1px solid #e3e7ee;border-radius:16px;box-shadow:0 2px 12px rgba(16,42,86,.06)}
+
+/* ===== Member accordion menu tiles (Miraz-approved, 2026-10-24) ===== */
+.acc{display:flex;flex-direction:column;gap:2px}
+.tile{border:0;width:100%;text-align:left;background:rgba(255,255,255,.07);border-radius:14px;padding:11px;display:flex;align-items:center;gap:12px;color:#fff;cursor:pointer}
+.tile .pic{width:46px;height:46px;flex-shrink:0;border-radius:12px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.tile .pic svg{width:27px;height:27px}
+.tile .t b{display:block;font-size:16px}
+.tile .t small{color:#c5cae9;font-size:12.5px}
+.tile .chev{margin-left:auto;font-size:16px;color:#aaa;transition:transform .3s}
+.acc.open .tile .chev{transform:rotate(180deg)}
+.tile.blood .pic{background:linear-gradient(135deg,#c62828,#ff5252)}
+.tile.vax .pic{background:linear-gradient(135deg,#0d47a1,#1e88e5)}
+.tile.drug .pic{background:linear-gradient(135deg,#00695c,#26a69a)}
+@keyframes tilePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
+.tile.blood .pic svg{animation:tilePulse 2.2s ease-in-out infinite;transform-origin:50% 85%}
+@keyframes tileShine{0%{transform:translateX(-60px) skewX(-20deg)}60%,100%{transform:translateX(70px) skewX(-20deg)}}
+.tile.vax .pic::after{content:"";position:absolute;top:0;bottom:0;width:20px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);animation:tileShine 3s ease-in-out infinite}
+@keyframes tileRock{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+.tile.drug .pic svg{animation:tileRock 2.6s ease-in-out infinite}
+.acc .sub{display:none;flex-direction:column;gap:2px;padding:2px 0 2px 58px}
+.acc.open .sub{display:flex}
+.acc .sub a{padding:9px 12px;border-radius:9px;background:rgba(255,255,255,.05)}
+@media(min-width:761px){
+  .acc .sub{display:flex}
+  .tile .chev{display:none}
+  .tile{cursor:default}
+}
+@media (prefers-reduced-motion: reduce){
+  .tile.blood .pic svg,.tile.vax .pic::after,.tile.drug .pic svg{animation:none}
+}
