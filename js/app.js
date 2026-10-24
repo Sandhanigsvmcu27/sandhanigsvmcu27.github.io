@@ -485,24 +485,55 @@ function sidebarHTML(activePage, sess) {
     ]],
   ];
   if (sess.role === 'admin') groups.push(['', [['users.html', 'users.html', '👥 ইউজার']]]);
+  // Manager tile: [css class, শিরোনাম, বাংলা সাবটাইটেল, SVG icon] — Miraz-approved tile design 2026-10-24
+  const tiles = {
+    '🩸 Blood Manager': ['blood', 'Blood Manager', 'রক্তদান ও ডোনার ব্যবস্থাপনা', '<svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2.5S5.5 10.6 5.5 15a6.5 6.5 0 0 0 13 0C18.5 10.6 12 2.5 12 2.5Z"/></svg>'],
+    '💉 Vaccine Manager': ['vax', 'Vaccine Manager', 'টিকাদান কর্মসূচি', '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(45 12 12)"><path d="M11 1.5h2V6h-2z"/><rect x="8" y="6" width="8" height="10" rx="1.5" fill="#fff" stroke="none"/><path d="M8 12h8M7 19h10M12 16v3"/></g></svg>'],
+    '💊 Drug Manager': ['drug', 'Drug Manager', 'বিনামূল্যে ওষুধ সেবা', '<svg viewBox="0 0 24 24"><g transform="rotate(-45 12 12)"><rect x="2.5" y="8" width="19" height="8" rx="4" fill="#fff"/><rect x="2.5" y="8" width="9.5" height="8" rx="4" fill="#b2dfdb"/><line x1="12" y1="8" x2="12" y2="16" stroke="#00695c" stroke-width="1.4"/></g></svg>'],
+  };
   let html = '<div class="sidebar"><div class="side-topbar"><span class="st-brand">🩸 Sandhani <span>GSVMC Unit</span></span><button type="button" class="side-toggle" id="sideToggle" aria-label="মেনু">☰</button></div>' +
     '<div class="who"><strong>' + esc(sess.name) + '</strong>' + roleBn + '</div><nav class="side-nav">';
   groups.forEach(([head, links]) => {
-    if (head) html += '<div class="side-h">' + head + '</div>';
+    if (!head) {
+      links.forEach(([key, href, label]) => {
+        html += '<a href="' + href + '"' + (activePage === key ? ' class="active"' : '') + '>' + label + '</a>';
+      });
+      return;
+    }
+    const meta = tiles[head] || ['blood', head, '', ''];
+    const isOpen = links.some(([key]) => key === activePage);
+    html += '<div class="acc' + (isOpen ? ' open' : '') + '"><button type="button" class="tile ' + meta[0] + '" aria-expanded="' + isOpen + '"><span class="pic">' + meta[3] + '</span><span class="t"><b>' + meta[1] + '</b><small>' + meta[2] + '</small></span><span class="chev">▾</span></button><div class="sub">';
     links.forEach(([key, href, label]) => {
       html += '<a href="' + href + '"' + (activePage === key ? ' class="active"' : '') + '>' + label + '</a>';
     });
+    html += '</div></div>';
   });
   html += '<div class="sp"></div><a href="#" class="logout" onclick="Auth.logout();return false;">🚪 লগআউট</a></nav></div>';
   return html;
 }
 
-// মোবাইলে sidebar topbar-এর ☰ টগল (সব member পেজে একবারই বাঁধা)
+// মোবাইলে sidebar topbar-এর ☰ টগল + manager tile accordion (সব member পেজে একবারই বাঁধা)
 document.addEventListener('click', function (e) {
-  const t = e.target && e.target.closest ? e.target.closest('#sideToggle') : null;
-  if (!t) return;
-  const sb = t.closest('.sidebar');
-  if (sb) { sb.classList.toggle('open'); t.textContent = sb.classList.contains('open') ? '✕' : '☰'; }
+  const closest = e.target && e.target.closest ? e.target.closest.bind(e.target) : null;
+  if (!closest) return;
+  const t = closest('#sideToggle');
+  if (t) {
+    const sb = t.closest('.sidebar');
+    if (sb) { sb.classList.toggle('open'); t.textContent = sb.classList.contains('open') ? '✕' : '☰'; }
+    return;
+  }
+  const tile = closest('.tile');
+  if (tile) {
+    const acc = tile.closest('.acc');
+    if (!acc) return;
+    const wasOpen = acc.classList.contains('open');
+    document.querySelectorAll('.sidebar .acc.open').forEach(a => {
+      a.classList.remove('open');
+      const b = a.querySelector('.tile');
+      if (b) b.setAttribute('aria-expanded', 'false');
+    });
+    if (!wasOpen) { acc.classList.add('open'); tile.setAttribute('aria-expanded', 'true'); }
+  }
 });
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function statusBadge(st) { return '<span class="badge ' + (STATUS_CLASS[st] || 'gray') + '">' + (STATUS_BN[st] || st) + '</span>'; }
