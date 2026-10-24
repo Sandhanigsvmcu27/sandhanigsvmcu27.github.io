@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ডোনার আবেদন — সন্ধানী মেম্বার এরিয়া</title>
+<link rel="stylesheet" href="../css/style.css">
+<meta name="theme-color" content="#d32f2f">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="../assets/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+<style>
+  .ds-card{border:1px solid #e3e7ee;border-radius:16px;padding:18px;margin-bottom:14px;background:#fff;box-shadow:0 2px 10px rgba(16,42,86,.05)}
+  .ds-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+  .ds-name{font-size:18px;font-weight:800}
+  .ds-grp{background:#ffebee;color:#b71c1c;font-weight:800;padding:4px 12px;border-radius:999px}
+  .ds-meta{font-size:14px;color:#444;line-height:1.9}
+  .ds-meta a{color:var(--blue);font-weight:700}
+  .ds-elig{font-weight:700}
+  .ds-elig.ok{color:#1b5e20}
+  .ds-elig.wait{color:#b71c1c}
+  .ds-btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+</style>
+</head>
+<body>
+
+<div class="member-shell">
+  <div class="member-main">
+    <h2 class="page">📝 ডোনার আবেদন</h2>
+    <div class="err" id="pageErr" style="display:none;"></div>
+    <div class="okbox" id="savedMsg" style="display:none;"></div>
+    <p class="note">স্বেচ্ছায় ডোনার হতে চাওয়া মানুষের আবেদন এখানে আসে। <strong>ফোনে যাচাই না করে কাউকে ডিরেক্টরিতে যোগ করবেন না</strong> — ভুল গ্রুপ বা ভুয়া এন্ট্রি ঢুকে যেতে পারে। যাচাই হলে "ডিরেক্টরিতে যোগ করুন" চাপুন, না হলে "বাতিল করুন"।</p>
+
+    <div class="card">
+      <h3 style="margin-bottom:12px;">⏳ যাচাই বাকি (<span id="pendCount">0</span>)</h3>
+      <div id="pendList"></div>
+    </div>
+
+    <div class="card">
+      <details>
+        <summary style="cursor:pointer;font-weight:700;">✅ প্রক্রিয়া সম্পন্ন আবেদন দেখুন</summary>
+        <div id="doneList" style="margin-top:12px;"></div>
+      </details>
+    </div>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/app.js"></script>
+<script>
+  (async function init() {
+    const sess = await Auth.guard(false);
+    if (!sess) return;
+    document.querySelector('.member-shell').insertAdjacentHTML('afterbegin', sidebarHTML('donor-signups.html', sess));
+    const IDENT_BN = { medical: 'মেডিকেল স্টুডেন্ট', dental: 'ডেন্টাল স্টুডেন্ট', outsider: 'বাইরের মানুষ' };
+
+    function eligHint(s) {
+      if (!s.last_donation_date) return '<span class="ds-elig">শেষ রক্তদানের তারিখ জানা নেই — ফোনে জিজ্ঞেস করুন</span>';
+      const st = donorStatus({ last_donation_date: s.last_donation_date });
+      if (st.eligible) return '<span class="ds-elig ok">🟢 যোগ্য (১২০ দিন পার হয়েছে)</span>';
+      return '<span class="ds-elig wait">🔴 বিরতিতে — ' + fmtDateBn(st.eligibleDate) + ' এর পর যোগ্য</span>';
+    }
+    function cardHTML(s) {
+      const d = document.createElement('div');
+      d.className = 'ds-card';
+      d.innerHTML =
+        '<div class="ds-head"><span class="ds-name">' + esc(s.name) + '</span><span class="ds-grp">' + esc(s.blood_group) + '</span></div>' +
+        '<div class="ds-meta">' +
+        '📞 <a href="tel:+88' + esc(s.phone) + '">' + esc(s.phone) + '</a><br>' +
+        '📍 এলাকা: ' + esc(s.area) + ' · ' + (IDENT_BN[s.identity] || 'বাইরের মানুষ') + (s.batch ? ' · ব্যাচ: ' + esc(s.batch) : '') + '<br>' +
+        eligHint(s) + '<br>' +
+        (s.note ? '💬 বার্তা: ' + esc(s.note) + '<br>' : '') +
+        '🕐 আবেদন: ' + fmtDateBn(s.created_at) +
+        '</div>' +
+        '<div class="ds-btns"><button type="button" class="btn ds-add">✅ ডিরেক্টরিতে যোগ করুন</button>' +
+        '<button type="button" class="btn ghost ds-rej">❌ বাতিল করুন</button></div>';
+      d.querySelector('.ds-add').addEventListener('click', () => approve(s));
+      d.querySelector('.ds-rej').addEventListener('click', () => reject(s));
+      return d;
+    }
+    async function approve(s) {
+      try {
+        const dup = await SB.get('/donors?select=id,name&phone=eq.' + encodeURIComponent(s.phone)) || [];
+        if (dup.length) {
+          if (!confirm('এই নম্বরটি ইতিমধ্যে ডিরেক্টরিতে আছে (' + dup[0].name + ')। আবেদনটি বাতিল হিসেবে চিহ্নিত করবেন?')) return;
+          await SB.update('/donor_signups?id=eq.' + encodeURIComponent(s.id), { status: 'rejected', handled_by: sess.name });
+          flash('আবেদনটি বাতিল করা হয়েছে (নম্বরটি আগে থেকেই ডিরেক্টরিতে আছে)।');
+        } else {
+          await SB.insert('donors', {
+            name: s.name, phone: s.phone, blood_group: s.blood_group, area: s.area,
+            batch: s.batch || null, last_donation_date: s.last_donation_date || null,
+            verified: true, notes: 'স্বেচ্ছায় আবেদন থেকে (টিম যাচাইকৃত)'
+          });
+          await SB.update('/donor_signups?id=eq.' + encodeURIComponent(s.id), { status: 'added', handled_by: sess.name });
+          flash('✅ ' + s.name + ' ডোনার ডিরেক্টরিতে যোগ হয়েছে।');
+        }
+        loadAll();
+      } catch (e) { showPageError('কাজটি করা যায়নি, আবার চেষ্টা করুন।'); }
+    }
+    async function reject(s) {
+      if (!confirm('এই আবেদনটি বাতিল করবেন?')) return;
+      try {
+        await SB.update('/donor_signups?id=eq.' + encodeURIComponent(s.id), { status: 'rejected', handled_by: sess.name });
+        flash('আবেদনটি বাতিল করা হয়েছে।');
+        loadAll();
+      } catch (e) { showPageError('কাজটি করা যায়নি, আবার চেষ্টা করুন।'); }
+    }
+    function flash(msg) {
+      const m = document.getElementById('savedMsg');
+      m.textContent = msg;
+      m.style.display = 'block';
+      m.scrollIntoView({ behavior: 'smooth' });
+    }
+    async function loadAll() {
+      hidePageError();
+      try {
+        const pend = await SB.get('/donor_signups?select=*&status=eq.pending&order=created_at.desc') || [];
+        const done = await SB.get('/donor_signups?select=*&status=neq.pending&order=created_at.desc&limit=50') || [];
+        document.getElementById('pendCount').textContent = pend.length;
+        const pl = document.getElementById('pendList');
+        pl.innerHTML = '';
+        if (!pend.length) pl.innerHTML = '<p class="note">কোনো নতুন আবেদন নেই।</p>';
+        pend.forEach(s => pl.appendChild(cardHTML(s)));
+        const dl = document.getElementById('doneList');
+        dl.innerHTML = '';
+        if (!done.length) dl.innerHTML = '<p class="note">এখনো কোনো আবেদন প্রক্রিয়া করা হয়নি।</p>';
+        done.forEach(s => {
+          const p = document.createElement('p');
+          p.className = 'note';
+          p.textContent = (s.status === 'added' ? '✅ যোগ হয়েছে: ' : '❌ বাতিল: ') + s.name + ' (' + s.blood_group + ', ' + s.phone + ')' + (s.handled_by ? ' — ' + s.handled_by : '');
+          dl.appendChild(p);
+        });
+      } catch (e) { showPageError(); }
+    }
+    loadAll();
+  })();
+</script>
+<script src="../js/pwa.js"></script>
+</body>
+</html>
