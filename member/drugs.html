@@ -59,7 +59,13 @@
     async function loadAll() {
       hidePageError();
       try {
-        meds = await SB.get('/medicines?select=*&order=generic_name.asc') || [];
+        // Catalog 1000 row er limit par hoye geche — page kore sob medicine load kora hoy, nahole search e notun oshudh pawa jeto na
+        meds = [];
+        for (let off = 0; ; off += 1000) {
+          const page = await SB.get('/medicines?select=*&order=generic_name.asc&limit=1000&offset=' + off) || [];
+          meds = meds.concat(page);
+          if (page.length < 1000) break;
+        }
         batches = await SB.get('/drug_batches?select=*&quantity=gt.0&order=expiry_date.asc') || [];
       } catch (e) { showPageError(); meds = []; batches = []; }
       meds.forEach(m => { medById[m.id] = m; });
@@ -101,7 +107,7 @@
         const near = bs.length ? bs[0].expiry_date : null;
         return { m, bs, tot, near };
       });
-      if (q) list = list.filter(x => (x.m.generic_name + ' ' + x.m.brand_name + ' ' + x.m.strength).toLowerCase().indexOf(q) !== -1);
+      if (q) list = list.filter(x => { let t = (x.m.generic_name + ' ' + x.m.brand_name + ' ' + x.m.strength).toLowerCase(); if (t.indexOf('rehydration') !== -1) t += ' ors'; return t.indexOf(q) !== -1; });
       else list = list.filter(x => x.tot > 0);
       list.sort((a, b) => {
         if (!a.near && !b.near) return 0;

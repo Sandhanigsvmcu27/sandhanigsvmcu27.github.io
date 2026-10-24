@@ -50,12 +50,17 @@
       const trs = rows.map(b => {
         const m = b._m || {};
         tot += (b.quantity || 0) * Number(b.unit_price || 0);
-        return '<tr><td><strong>' + esc(m.generic_name || '?') + '</strong> <span style="color:#555;">' + (m.brand_name ? esc(m.brand_name) + ' · ' : '') + (m.strength ? esc(m.strength) + ' · ' : '') + (FORM_BN[m.form] || '') + '</span></td><td>' + esc(b.batch_no || '—') + '</td><td>' + (b.expiry_date ? fmtDateBn(b.expiry_date) : 'অজানা') + '</td><td>' + b.quantity + '</td><td>৳' + ((b.quantity || 0) * Number(b.unit_price || 0)).toLocaleString('en-IN') + '</td></tr>';
+        return '<tr><td><strong>' + esc(m.generic_name || '?') + '</strong> <span style="color:#555;">' + (m.brand_name ? esc(m.brand_name) + ' · ' : '') + (m.strength ? esc(m.strength) + ' · ' : '') + (FORM_BN[m.form] || m.form || '') + '</span></td><td>' + esc(b.batch_no || '—') + '</td><td>' + (b.expiry_date ? fmtDateBn(b.expiry_date) : 'অজানা') + '</td><td>' + b.quantity + '</td><td>৳' + ((b.quantity || 0) * Number(b.unit_price || 0)).toLocaleString('en-IN') + '</td></tr>';
       }).join('');
       return '<table class="t"><thead><tr><th>ওষুধ</th><th>ব্যাচ</th><th>মেয়াদ</th><th>পরিমাণ</th><th>মূল্য</th></tr></thead><tbody>' + trs + '</tbody></table><p style="margin-top:8px;">মোট মূল্য: <strong>৳' + tot.toLocaleString('en-IN') + '</strong></p>';
     }
     try {
-      const meds = await SB.get('/medicines?select=*') || [];
+      const meds = [];
+      for (let off = 0; ; off += 1000) {
+        const page = await SB.get('/medicines?select=*&limit=1000&offset=' + off) || [];
+        meds.push(...page);
+        if (page.length < 1000) break;
+      }
       const byId = {}; meds.forEach(m => { byId[m.id] = m; });
       const batches = await SB.get('/drug_batches?select=*&quantity=gt.0&expiry_date=not.is.null&order=expiry_date.asc') || [];
       batches.forEach(b => { b._m = byId[b.medicine_id]; });

@@ -117,7 +117,7 @@
         d.querySelector('.rc-fields').style.display = 'none';
         const q = search.value.trim().toLowerCase();
         if (q.length < 2) { sugg.style.display = 'none'; return; }
-        let hits = meds.filter(m => (m.generic_name + ' ' + m.brand_name + ' ' + m.strength).toLowerCase().indexOf(q) !== -1);
+        let hits = meds.filter(m => searchText(m).indexOf(q) !== -1);
         hits.sort((a, b) => {
           // generic নামের মিল আগে (প্রাধান্য generic-কে), তারপর brand মিল, তারপর আগে-তোলা
           const sa = a.generic_name.toLowerCase().startsWith(q) ? 0 : ((a.brand_name || '').toLowerCase().startsWith(q) ? 1 : 2);
@@ -126,13 +126,14 @@
           const ra = recentMedIds.indexOf(a.id) !== -1 ? 0 : 1, rb = recentMedIds.indexOf(b.id) !== -1 ? 0 : 1;
           return ra - rb;
         });
-        hits = hits.slice(0, 6);
+        hits = hits.slice(0, 8);
         if (!hits.length) { sugg.innerHTML = '<div style="cursor:default;color:#777;">তালিকায় নেই — <a href="drug-add.html">নতুন ওষুধ যোগ করুন</a></div>'; sugg.style.display = ''; return; }
         sugg.innerHTML = '';
         hits.forEach(m => {
           const p = priceOf(m);
           const row = document.createElement('div');
-          row.innerHTML = esc(medLabel(m)) + (p != null ? ' <strong style="color:#1565c0;float:right;">৳' + p + '</strong>' : '');
+          // MedEx-style row: generic age, brand bold, tarpor strength · form, dan pase dam
+          row.innerHTML = esc(m.generic_name) + (m.brand_name ? ' — <strong>' + esc(m.brand_name) + '</strong>' : '') + (m.strength ? ' · ' + esc(m.strength) : '') + ' · ' + esc(FORM_BN[m.form] || m.form) + (p != null ? ' <strong style="color:#1565c0;float:right;">৳' + p + '</strong>' : '');
           row.addEventListener('click', () => pickMed(d, m));
           sugg.appendChild(row);
         });
@@ -189,9 +190,21 @@
       });
     }
 
+    function searchText(m) {
+      // Generic + brand + strength sob miliye khuje; ORS likhleo oral rehydration salt pawa jabe
+      let t = (m.generic_name + ' ' + m.brand_name + ' ' + m.strength).toLowerCase();
+      if (t.indexOf('rehydration') !== -1) t += ' ors';
+      return t;
+    }
     async function loadMeds() {
       try {
-        meds = await SB.get('/medicines?select=*&order=brand_name.asc') || [];
+        // Catalog ekhon 1976+ row — ek call e 1000 row er limit e atke jeto, tai page kore sob load kora hoy
+        meds = [];
+        for (let off = 0; ; off += 1000) {
+          const page = await SB.get('/medicines?select=*&order=brand_name.asc&limit=1000&offset=' + off) || [];
+          meds = meds.concat(page);
+          if (page.length < 1000) break;
+        }
         meds.forEach(m => { medById[m.id] = m; });
         const bs = await SB.get('/drug_batches?select=medicine_id,unit_price,created_at&order=created_at.desc&limit=300') || [];
         lastPrice = {}; recentMedIds = [];
