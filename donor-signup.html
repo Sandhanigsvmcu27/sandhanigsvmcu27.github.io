@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ডোনার হতে চাই — সন্ধানী GSVMC ইউনিট</title>
+<meta property="og:type" content="website">
+<meta property="og:title" content="ডোনার হতে চাই — সন্ধানী GSVMC ইউনিট">
+<meta property="og:description" content="স্বেচ্ছায় রক্ত দিতে চান? ফর্মটি পূরণ করুন — সন্ধানী টিম ফোনে যাচাই করে ডোনার তালিকায় যোগ করবে।">
+<meta property="og:url" content="https://sandhanigsvmcu27.github.io/donor-signup.html">
+<meta property="og:image" content="https://sandhanigsvmcu27.github.io/assets/og-banner.jpg">
+
+<meta name="description" content="স্বেচ্ছায় রক্তদাতা হতে চান? সন্ধানী গণস্বাস্থ্য সমাজ ভিত্তিক মেডিকেল কলেজ ইউনিটের ডোনার আবেদন ফর্ম।">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+<meta name="theme-color" content="#d32f2f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="pub">
+
+<header class="site">
+  <img class="logo" src="../assets/sandhani-logo.jpg" alt="সন্ধানী লোগো">
+  <div class="org">
+    <h1>সন্ধানী</h1>
+    <p>গণস্বাস্থ্য সমাজ ভিত্তিক মেডিকেল কলেজ ইউনিট</p>
+  </div>
+  <button class="nav-toggle" id="navToggle" aria-label="মেনু">☰</button>
+  <nav class="main" id="mainNav">
+    <a href="index.html">হোম</a>
+    <a href="index.html#stock">স্টক</a>
+    <a href="index.html#activities">কার্যক্রম</a>
+    <a href="vaccine.html">টিকাদান</a>
+    <a href="request.html">রক্তের অনুরোধ</a>
+    <a href="track.html">অনুরোধ ট্র্যাক</a>
+    <a href="shikkha.html">রক্তদান সম্পর্কে</a>
+    <a href="index.html#rules">নিয়মাবলী</a>
+    <a class="emergency" href="request.html">🩸 জরুরি রক্ত লাগবে</a>
+    <a class="login" href="login.html">মেম্বার লগইন</a>
+  </nav>
+</header>
+
+<section>
+  <span class="kick">স্বেচ্ছায় রক্তদান</span>
+  <h3 class="sec">🩸 ডোনার হতে চাই</h3>
+  <div class="card">
+    <p>আপনি যদি স্বেচ্ছায় রক্ত দিতে চান, নিচের ফর্মটি পূরণ করুন। <strong>সন্ধানী টিম ফোনে যাচাই করে</strong> তারপর আপনাকে ডোনার তালিকায় যোগ করবে — ফর্ম পূরণ করলেই নাম তালিকায় উঠবে না, এটা যাচাইয়ের জন্য।</p>
+    <p class="note">🔒 আপনার নাম ও মোবাইল নম্বর <strong>শুধু সন্ধানী টিম দেখতে পারবে</strong> — পাবলিকভাবে কখনো প্রকাশ করা হবে না। রক্ত দেওয়ার পর থেকে <strong>১২০ দিনের বিরতি</strong> নিয়ম প্রযোজ্য হবে।</p>
+  </div>
+
+  <div class="steps3">
+    <div class="step3"><span class="n">১</span><strong>ফর্ম পূরণ করুন</strong><span class="lbl">নাম, নম্বর, গ্রুপ ও এলাকা দিন</span></div>
+    <div class="step3"><span class="n">২</span><strong>টিম ফোনে যাচাই করবে</strong><span class="lbl">গ্রুপ ও ইচ্ছা নিশ্চিত করবে</span></div>
+    <div class="step3"><span class="n">৩</span><strong>ডোনার তালিকায় যোগ</strong><span class="lbl">প্রয়োজনে টিম আপনাকে কল করবে</span></div>
+  </div>
+</section>
+
+<section>
+  <div class="card">
+    <div class="err" id="pageErr" style="display:none;"></div>
+    <form class="f" id="donorForm" onsubmit="return false">
+      <fieldset>
+        <legend>আপনার তথ্য</legend>
+        <div>
+          <label for="dName">আপনার নাম <span class="req-star">*</span></label>
+          <input type="text" id="dName" required placeholder="পুরো নাম লিখুন" autocomplete="name">
+        </div>
+        <div>
+          <label for="dPhone">মোবাইল নম্বর <span class="req-star">*</span></label>
+          <input type="tel" id="dPhone" required placeholder="01XXXXXXXXX" inputmode="tel" autocomplete="tel">
+          <p class="field-err" id="phoneErr">সঠিক মোবাইল নম্বর দিন — 01 দিয়ে শুরু হওয়া ১১ ডিজিটের নম্বর হতে হবে।</p>
+          <p class="note">এই নম্বরে টিম যাচাইয়ের জন্য কল করবে। নম্বরটি পাবলিকভাবে প্রকাশ করা হবে না।</p>
+        </div>
+        <div>
+          <label for="dGroup">রক্তের গ্রুপ <span class="req-star">*</span></label>
+          <select id="dGroup" required></select>
+        </div>
+        <div>
+          <label for="dArea">এলাকা <span class="req-star">*</span></label>
+          <input type="text" id="dArea" required placeholder="যেমন: সাভার, ঢাকা">
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>পরিচয় ও রক্তদানের ইতিহাস</legend>
+        <div>
+          <label for="dIdentity">আপনি কে?</label>
+          <select id="dIdentity">
+            <option value="outsider">বাইরের মানুষ (সাধারণ জনগণ)</option>
+            <option value="medical">মেডিকেল স্টুডেন্ট</option>
+            <option value="dental">ডেন্টাল স্টুডেন্ট</option>
+          </select>
+        </div>
+        <div>
+          <label for="dBatch">ব্যাচ (স্টুডেন্ট হলে)</label>
+          <input type="text" id="dBatch" placeholder="যেমন: MBBS 27">
+        </div>
+        <div>
+          <label for="dLast">শেষ কবে রক্ত দিয়েছেন? (জানা থাকলে)</label>
+          <input type="date" id="dLast">
+          <p class="note">শেষ রক্তদানের তারিখ জানা থাকলে ১২০ দিনের হিসাব সঠিকভাবে রাখা যাবে।</p>
+        </div>
+        <div>
+          <label for="dNote">টিমকে কিছু জানাতে চাইলে</label>
+          <textarea id="dNote" rows="3" placeholder="আপনার বার্তা লিখুন..."></textarea>
+        </div>
+      </fieldset>
+      <label style="display:flex;gap:10px;align-items:flex-start;font-weight:600;">
+        <input type="checkbox" id="dConsent" required style="width:20px;height:20px;margin-top:2px;">
+        <span>আমি স্বেচ্ছায় ডোনার হতে চাই। আমার তথ্য শুধু সন্ধানী টিম দেখবে — পাবলিকভাবে প্রকাশ করা হবে না, এটা আমি বুঝেছি। <span class="req-star">*</span></span>
+      </label>
+      <button type="submit" style="margin-top:14px;">ডোনার আবেদন পাঠান →</button>
+    </form>
+  </div>
+
+  <div id="confirmWrap" style="display:none;">
+    <div class="confirm-box">
+      <div style="font-size:20px;font-weight:700;">✅ ধন্যবাদ! আপনার আবেদন টিমের কাছে পৌঁছেছে!</div>
+      <p id="confirmLine" style="margin-top:10px;"></p>
+      <p style="margin-top:10px;">সন্ধানী টিম শীঘ্রই আপনার দেওয়া নম্বরে ফোনে যাচাই করবে। যাচাই সম্পন্ন হলে আপনার নাম ডোনার তালিকায় যোগ হবে — তারপর থেকে রক্তের প্রয়োজনে টিম আপনাকে কল করতে পারবে।</p>
+      <p class="note" style="margin-top:10px;">জরুরি প্রয়োজনে সরাসরি কল করতে চাইলে <a href="index.html#call">জরুরি যোগাযোগ</a> দেখুন।</p>
+    </div>
+  </div>
+</section>
+
+<footer class="site" id="contact">
+  <div class="fwrap">
+    <div class="fbrand">
+      <strong>সন্ধানী — গণস্বাস্থ্য সমাজ ভিত্তিক মেডিকেল কলেজ ইউনিট</strong>
+      <p>রক্ত দিন, জীবন বাঁচান 🩸</p>
+    </div>
+    <nav class="flinks">
+      <h4>গুরুত্বপূর্ণ লিংক</h4>
+      <a href="index.html">হোম</a>
+      <a href="request.html">রক্তের অনুরোধ</a>
+      <a href="track.html">অনুরোধ ট্র্যাক করুন</a>
+      <a href="vaccine.html">টিকাদান</a>
+      <a href="gallery.html">কার্যক্রম</a>
+      <a href="shikkha.html">রক্তদানের নিয়মাবলী</a>
+    </nav>
+    <div class="fcontact">
+      <h4>যোগাযোগ</h4>
+      <p>হাসপাতাল ভবন, ২য় তলা, রুম নং-২১৫,<br>মির্জানগর, সাভার, ঢাকা-১৩৪৪</p>
+      <p><a href="https://www.facebook.com/sandhani.gsvmcu" target="_blank" rel="noopener">📘 আমাদের Facebook পেজ</a></p>
+    </div>
+  </div>
+  <p class="fcopy">© ২০২৬ সন্ধানী গণস্বাস্থ্য সমাজ ভিত্তিক মেডিকেল কলেজ ইউনিট</p>
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+<script src="js/nav.js"></script>
+<script>
+  const sel = document.getElementById('dGroup');
+  GROUPS.forEach(g => { const o = document.createElement('option'); o.value = g; o.textContent = grpDisplay(g); sel.appendChild(o); });
+
+  document.getElementById('donorForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    hidePageError();
+    const phoneEl = document.getElementById('dPhone');
+    const phoneErr = document.getElementById('phoneErr');
+    const phoneClean = phoneEl.value.replace(/[\s-]/g, '');
+    if (!/^01[3-9]\d{8}$/.test(phoneClean)) {
+      phoneErr.style.display = 'block';
+      phoneEl.classList.add('invalid');
+      phoneEl.focus();
+      phoneEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    phoneErr.style.display = 'none';
+    phoneEl.classList.remove('invalid');
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    const name = document.getElementById('dName').value.trim();
+    const payload = {
+      name: name,
+      phone: phoneClean,
+      blood_group: sel.value,
+      area: document.getElementById('dArea').value.trim(),
+      identity: document.getElementById('dIdentity').value,
+      batch: document.getElementById('dBatch').value.trim() || null,
+      last_donation_date: document.getElementById('dLast').value || null,
+      note: document.getElementById('dNote').value.trim()
+    };
+    try {
+      // anon-এর donor_signups-এ SELECT অনুমতি নেই — return=minimal জরুরি
+      await SB.insert('donor_signups', payload, { auth: false, prefer: 'return=minimal' });
+      document.getElementById('donorForm').closest('.card').style.display = 'none';
+      document.getElementById('confirmLine').textContent = name + ' (' + grpDisplay(sel.value) + ') — আপনার ডোনার আবেদন জমা হয়েছে।';
+      const cw = document.getElementById('confirmWrap');
+      cw.style.display = 'block';
+      cw.scrollIntoView({ behavior: 'smooth' });
+    } catch (err) {
+      showPageError('আবেদন পাঠানো যায়নি, আবার চেষ্টা করুন।');
+      btn.disabled = false;
+    }
+  });
+</script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

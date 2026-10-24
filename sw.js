@@ -5,13 +5,14 @@
    - Page navigations: network-first, fall back to cache, then offline page.
    - Static assets (css/js/images): stale-while-revalidate.
    Bump VERSION whenever this file or the precache list changes. */
-var VERSION = 'sandhani-pwa-v5';
+var VERSION = 'sandhani-pwa-v6';
 var CORE = [
   './',
   './index.html',
   './request.html',
   './track.html',
   './vaccine.html',
+  './donor-signup.html',
   './shikkha.html',
   './gallery.html',
   './login.html',
