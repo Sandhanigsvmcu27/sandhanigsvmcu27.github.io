@@ -470,6 +470,7 @@ function sidebarHTML(activePage, sess) {
     ['🩸 Blood Manager', [
       ['donors.html', 'donors.html', '🩸 ডোনার ডিরেক্টরি'],
       ['inbox.html', 'inbox.html', '📥 ইনবক্স (অনুরোধ)'],
+      ['donor-signups.html', 'donor-signups.html', '📝 ডোনার আবেদন'],
       ['stock.html', 'stock.html', '🧊 রক্তের স্টক'],
       ['exchange.html', 'exchange.html', '🔄 এক্সচেঞ্জ'],
     ]],

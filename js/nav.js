@@ -23,6 +23,18 @@ document.addEventListener('DOMContentLoaded', function () {
     if ((a.getAttribute('href') || '') === page) a.classList.add('active');
   });
 
+  // সব public পেজের মেনুতে "ডোনার হতে চাই" লিংক (2026-10-24: campaign-এ share করার জন্য)
+  if (document.body.classList.contains('pub')) {
+    var mn = document.getElementById('mainNav');
+    if (mn && !mn.querySelector('a[href="donor-signup.html"]')) {
+      var dl = document.createElement('a');
+      dl.href = 'donor-signup.html';
+      dl.textContent = '🩸 ডোনার হতে চাই';
+      var em = mn.querySelector('.emergency');
+      if (em) mn.insertBefore(dl, em); else mn.appendChild(dl);
+    }
+  }
+
   // ভাসমান শুধু কল বোতাম (Premium pack 2026-10-22: FB/Messenger footer-এ সরানো হয়েছে)
   if (document.body.classList.contains('pub') && !document.querySelector('.float-social')) {
     var fs = document.createElement('div');
